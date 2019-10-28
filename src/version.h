@@ -25,7 +25,7 @@
 #ifndef XMRIG_VERSION_H
 #define XMRIG_VERSION_H
 
-#define APP_ID        "xmrig"
+#define APP_ID        "xmrig-cuda"
 #define APP_NAME      "XMRig"
 #define APP_DESC      "XMRig CUDA plugin"
 #define APP_VERSION   "1.0.0"
