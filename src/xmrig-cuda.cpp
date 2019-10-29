@@ -31,6 +31,7 @@
 #include <map>
 #include <mutex>
 #include <string>
+#include <cuda_runtime_api.h>
 
 
 static std::mutex mutex;
@@ -334,11 +335,31 @@ void release(nvid_ctx *ctx)
         return;
     }
 
-    if (ctx->ready) {
-        cryptonight_extra_cpu_free(ctx);
-    }
+    delete[] ctx->device_name;
 
-    delete [] ctx->device_name;
+    // cudaFree, cuModuleUnload, cuCtxDestroy check for nullptr internally
+
+    cudaFree(ctx->d_input);
+    cudaFree(ctx->d_result_count);
+    cudaFree(ctx->d_result_nonce);
+    cudaFree(ctx->d_long_state);
+    cudaFree(ctx->d_ctx_state);
+    cudaFree(ctx->d_ctx_state2);
+    cudaFree(ctx->d_ctx_a);
+    cudaFree(ctx->d_ctx_b);
+    cudaFree(ctx->d_ctx_key1);
+    cudaFree(ctx->d_ctx_key2);
+    cudaFree(ctx->d_ctx_text);
+
+    cudaFree(ctx->d_rx_dataset);
+    cudaFree(ctx->d_rx_hashes);
+    cudaFree(ctx->d_rx_entropy);
+    cudaFree(ctx->d_rx_vm_states);
+    cudaFree(ctx->d_rx_rounding);
+
+    cuModuleUnload(ctx->module);
+
+    cuCtxDestroy(ctx->cuContext);
 
     delete ctx;
 }
