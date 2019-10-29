@@ -574,8 +574,6 @@ int cuda_get_deviceinfo(nvid_ctx *ctx)
     if ((ctx->algorithm.family() == Algorithm::RANDOM_X) && ((ctx->device_blocks < 0) || (ctx->device_threads < 0))) {
         ctx->device_threads = 32;
         ctx->device_blocks = props.multiProcessorCount * 2;
-        ctx->device_bfactor = 6;
-        ctx->device_bsleep = 0;
 
         // Leave memory for 2080 MB dataset + 64 MB free
         // Each thread uses 1 scratchpad plus a few small buffers on GPU
