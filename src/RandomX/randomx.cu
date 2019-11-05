@@ -32,11 +32,19 @@ void randomx_prepare(nvid_ctx *ctx, const void *dataset, size_t dataset_size, ui
     ctx->rx_batch_size      = batch_size;
     ctx->d_scratchpads_size = batch_size * ctx->algorithm.l3();
 
-    CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_rx_dataset, dataset_size));
+    if (ctx->rx_dataset_host) {
+        ctx->rx_dataset_host_ptr = (void*) dataset;
+        CUDA_CHECK(ctx->device_id, cudaHostRegister(ctx->rx_dataset_host_ptr, dataset_size, cudaHostRegisterPortable | cudaHostRegisterMapped));
+        CUDA_CHECK(ctx->device_id, cudaHostGetDevicePointer(&ctx->d_rx_dataset, ctx->rx_dataset_host_ptr, 0));
+    }
+    else {
+        CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_rx_dataset, dataset_size));
+        CUDA_CHECK(ctx->device_id, cudaMemcpy(ctx->d_rx_dataset, dataset, dataset_size, cudaMemcpyHostToDevice));
+    }
+
     CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_long_state, ctx->d_scratchpads_size));
     CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_rx_hashes, batch_size * 64));
     CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_rx_entropy, batch_size * (128 + 2560)));
     CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_rx_vm_states, batch_size * 2560));
     CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_rx_rounding, batch_size * sizeof(uint32_t)));
-    CUDA_CHECK(ctx->device_id, cudaMemcpy(ctx->d_rx_dataset, dataset, dataset_size, cudaMemcpyHostToDevice));
 }

@@ -134,7 +134,7 @@ bool rxHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *resco
 }
 
 
-bool rxPrepare(nvid_ctx *ctx, const void *dataset, size_t datasetSize, uint32_t batchSize)
+bool rxPrepare(nvid_ctx *ctx, const void *dataset, size_t datasetSize, bool dataset_host, uint32_t batchSize)
 {
     resetError(ctx->device_id);
 
@@ -194,11 +194,12 @@ const char *pluginVersion()
 }
 
 
-int32_t deviceInfo(nvid_ctx *ctx, int32_t blocks, int32_t threads, int32_t algo)
+int32_t deviceInfo(nvid_ctx *ctx, int32_t blocks, int32_t threads, int32_t algo, int32_t dataset_host)
 {
     ctx->algorithm      = algo;
     ctx->device_blocks  = blocks;
     ctx->device_threads = threads;
+    ctx->rx_dataset_host = dataset_host != 0;
 
     return cuda_get_deviceinfo(ctx);
 }
@@ -252,6 +253,9 @@ int32_t deviceInt(nvid_ctx *ctx, DeviceProperty property)
 
     case DevicePciDomainID:
         return ctx->device_pciDomainID;
+
+    case DeviceDatasetHost:
+        return ctx->rx_dataset_host ? 1 : 0;
 
     default:
         break;
@@ -351,7 +355,13 @@ void release(nvid_ctx *ctx)
     cudaFree(ctx->d_ctx_key2);
     cudaFree(ctx->d_ctx_text);
 
-    cudaFree(ctx->d_rx_dataset);
+    if (ctx->rx_dataset_host) {
+        cudaHostUnregister(ctx->rx_dataset_host_ptr);
+    }
+    else {
+        cudaFree(ctx->d_rx_dataset);
+    }
+
     cudaFree(ctx->d_rx_hashes);
     cudaFree(ctx->d_rx_entropy);
     cudaFree(ctx->d_rx_vm_states);
