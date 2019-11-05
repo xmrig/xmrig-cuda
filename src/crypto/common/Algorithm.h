@@ -27,6 +27,7 @@
 #define XMRIG_ALGORITHM_H
 
 
+#include <cstddef>
 #include <vector>
 
 
