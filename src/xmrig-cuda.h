@@ -67,7 +67,8 @@ enum DeviceProperty : uint32_t
     DeviceMemoryFree,
     DevicePciBusID,
     DevicePciDeviceID,
-    DevicePciDomainID
+    DevicePciDomainID,
+    DeviceDatasetHost,
 };
 
 
@@ -79,12 +80,12 @@ extern "C" {
 XMRIG_EXPORT bool cnHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t height, uint64_t target, uint32_t *rescount, uint32_t *resnonce);
 XMRIG_EXPORT bool deviceInit(nvid_ctx *ctx);
 XMRIG_EXPORT bool rxHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce);
-XMRIG_EXPORT bool rxPrepare(nvid_ctx *ctx, const void *dataset, size_t datasetSize, uint32_t batchSize);
+XMRIG_EXPORT bool rxPrepare(nvid_ctx *ctx, const void *dataset, size_t datasetSize, bool dataset_host, uint32_t batchSize);
 XMRIG_EXPORT bool setJob(nvid_ctx *ctx, const void *data, size_t size, int32_t algo);
 XMRIG_EXPORT const char *deviceName(nvid_ctx *ctx);
 XMRIG_EXPORT const char *lastError(nvid_ctx *ctx);
 XMRIG_EXPORT const char *pluginVersion();
-XMRIG_EXPORT int32_t deviceInfo(nvid_ctx *ctx, int32_t blocks, int32_t threads, int32_t algo);
+XMRIG_EXPORT int32_t deviceInfo(nvid_ctx *ctx, int32_t blocks, int32_t threads, int32_t algo, int32_t dataset_host);
 XMRIG_EXPORT int32_t deviceInt(nvid_ctx *ctx, DeviceProperty property);
 XMRIG_EXPORT nvid_ctx *alloc(uint32_t id, int32_t bfactor, int32_t bsleep);
 XMRIG_EXPORT uint32_t deviceCount();

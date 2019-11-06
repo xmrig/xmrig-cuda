@@ -346,19 +346,20 @@ int cryptonight_extra_cpu_init(nvid_ctx *ctx, const xmrig::Algorithm &algorithm,
     }
 
     CUDA_CHECK(ctx->device_id, cudaDeviceReset());
+    const unsigned int device_flags = cudaDeviceMapHost;
     switch (ctx->syncMode)
     {
     case 0:
-        CUDA_CHECK(ctx->device_id, cudaSetDeviceFlags(cudaDeviceScheduleAuto));
+        CUDA_CHECK(ctx->device_id, cudaSetDeviceFlags(device_flags | cudaDeviceScheduleAuto));
         break;
     case 1:
-        CUDA_CHECK(ctx->device_id, cudaSetDeviceFlags(cudaDeviceScheduleSpin));
+        CUDA_CHECK(ctx->device_id, cudaSetDeviceFlags(device_flags | cudaDeviceScheduleSpin));
         break;
     case 2:
-        CUDA_CHECK(ctx->device_id, cudaSetDeviceFlags(cudaDeviceScheduleYield));
+        CUDA_CHECK(ctx->device_id, cudaSetDeviceFlags(device_flags | cudaDeviceScheduleYield));
         break;
     default:
-        CUDA_CHECK(ctx->device_id, cudaSetDeviceFlags(cudaDeviceScheduleBlockingSync));
+        CUDA_CHECK(ctx->device_id, cudaSetDeviceFlags(device_flags | cudaDeviceScheduleBlockingSync));
         break;
     };
 
@@ -575,9 +576,13 @@ int cuda_get_deviceinfo(nvid_ctx *ctx)
         ctx->device_threads = 32;
         ctx->device_blocks = props.multiProcessorCount * 2;
 
+        // Use dataset on host for GPUs with less than 3 GB free memory
+        ctx->rx_dataset_host = (freeMemory < (3072u << 20));
+
         // Leave memory for 2080 MB dataset + 64 MB free
         // Each thread uses 1 scratchpad plus a few small buffers on GPU
-        const size_t max_blocks = (freeMemory - (2080u << 20) - (64u << 20)) / (ctx->algorithm.l3() + 32768) / 32;
+        const size_t dataset_size = 2080u << 20;
+        const size_t max_blocks = (freeMemory - (ctx->rx_dataset_host ? 0 : dataset_size) - (64u << 20)) / (ctx->algorithm.l3() + 32768) / 32;
         if (ctx->device_blocks > max_blocks) {
             ctx->device_blocks = max_blocks;
         }
