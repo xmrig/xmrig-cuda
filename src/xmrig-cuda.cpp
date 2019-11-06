@@ -24,6 +24,7 @@
 
 
 #include "cryptonight.h"
+#include "cuda_device.hpp"
 #include "version.h"
 #include "xmrig-cuda.h"
 
@@ -35,7 +36,44 @@
 
 
 static std::mutex mutex;
+
+
+class DatasetHost
+{
+public:
+    inline const void *reg(const void *dataset, size_t size)
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+
+        if (!m_ptr) {
+            m_ptr = const_cast<void *>(dataset);
+            CUDA_CHECK(0, cudaHostRegister(m_ptr, size, cudaHostRegisterPortable | cudaHostRegisterMapped));
+        }
+
+        ++m_refs;
+
+        return m_ptr;
+    }
+
+
+    inline void release()
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+
+        --m_refs;
+
+        if (m_refs == 0) {
+            cudaHostUnregister(m_ptr);
+        }
+    }
+
+    int32_t m_refs  = 0;
+    void *m_ptr     = nullptr;
+};
+
+
 static std::map<int, std::string> errors;
+static DatasetHost datasetHost;
 
 
 static inline void saveError(int id, std::exception &ex)
@@ -139,7 +177,7 @@ bool rxPrepare(nvid_ctx *ctx, const void *dataset, size_t datasetSize, bool, uin
     resetError(ctx->device_id);
 
     try {
-        randomx_prepare(ctx, dataset, datasetSize, batchSize);
+        randomx_prepare(ctx, ctx->rx_dataset_host > 0 ? datasetHost.reg(dataset, datasetSize) : dataset, datasetSize, batchSize);
     }
     catch (std::exception &ex) {
         saveError(ctx->device_id, ex);
@@ -355,8 +393,8 @@ void release(nvid_ctx *ctx)
     cudaFree(ctx->d_ctx_key2);
     cudaFree(ctx->d_ctx_text);
 
-    if (ctx->rx_dataset_host) {
-        cudaHostUnregister(ctx->rx_dataset_host_ptr);
+    if (ctx->rx_dataset_host > 0) {
+        datasetHost.release();
     }
     else {
         cudaFree(ctx->d_rx_dataset);

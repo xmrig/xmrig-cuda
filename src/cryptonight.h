@@ -75,7 +75,6 @@ struct nvid_ctx {
 
     uint32_t rx_batch_size              = 0;
     int32_t rx_dataset_host             = -1;
-    void *rx_dataset_host_ptr           = nullptr;
     uint32_t *d_rx_dataset              = nullptr;
     uint32_t *d_rx_hashes               = nullptr;
     uint32_t *d_rx_entropy              = nullptr;

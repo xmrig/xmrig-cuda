@@ -33,9 +33,7 @@ void randomx_prepare(nvid_ctx *ctx, const void *dataset, size_t dataset_size, ui
     ctx->d_scratchpads_size = batch_size * (ctx->algorithm.l3() + 64);
 
     if (ctx->rx_dataset_host > 0) {
-        ctx->rx_dataset_host_ptr = (void*) dataset;
-        CUDA_CHECK(ctx->device_id, cudaHostRegister(ctx->rx_dataset_host_ptr, dataset_size, cudaHostRegisterPortable | cudaHostRegisterMapped));
-        CUDA_CHECK(ctx->device_id, cudaHostGetDevicePointer(&ctx->d_rx_dataset, ctx->rx_dataset_host_ptr, 0));
+        CUDA_CHECK(ctx->device_id, cudaHostGetDevicePointer(&ctx->d_rx_dataset, const_cast<void *>(dataset), 0));
     }
     else {
         CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_rx_dataset, dataset_size));
