@@ -30,7 +30,7 @@ along with RandomX CUDA.  If not, see<http://www.gnu.org/licenses/>.
 void randomx_prepare(nvid_ctx *ctx, const void *dataset, size_t dataset_size, uint32_t batch_size)
 {
     ctx->rx_batch_size      = batch_size;
-    ctx->d_scratchpads_size = batch_size * ctx->algorithm.l3();
+    ctx->d_scratchpads_size = batch_size * (ctx->algorithm.l3() + 64);
 
     if (ctx->rx_dataset_host > 0) {
         ctx->rx_dataset_host_ptr = (void*) dataset;
