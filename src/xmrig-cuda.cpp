@@ -331,7 +331,7 @@ uint32_t version(Version version)
 {
     switch (version) {
     case ApiVersion:
-        return API_VERSION;
+        return APP_VER_MAJOR;
 
     case DriverVersion:
         return static_cast<uint32_t>(cuda_get_driver_version());
