@@ -432,7 +432,7 @@ __global__ void __launch_bounds__(32, 16) init_vm(void* entropy_data, void* vm_s
 	__shared__ uint32_t execution_plan_buf[RANDOMX_PROGRAM_SIZE * WORKERS_PER_HASH * (32 / 8) * sizeof(exec_t) / sizeof(uint32_t)];
 
 	set_buffer(execution_plan_buf, 0);
-	__syncwarp();
+	__syncthreads();
 
 	const uint32_t global_index = blockIdx.x * blockDim.x + threadIdx.x;
 	const uint32_t idx = global_index / 8;
@@ -1828,7 +1828,6 @@ __device__ void inner_loop(
 	uint32_t* imm_buf,
 	const uint32_t batch_size,
 	uint32_t &fprc,
-	const uint32_t fp_workers_mask,
 	const uint64_t xexponentMask,
 	const uint32_t workers_mask
 )
@@ -2034,7 +2033,7 @@ __device__ void inner_loop(
 		{
 			asm("// SYNCHRONIZATION OF INSTRUCTION POINTER AND ROUNDING MODE BEGIN");
 
-			__syncwarp(workers_mask);
+			asm("bar.warp.sync %0;" :: "r"(workers_mask));
 			ip = imm_buf[IMM_INDEX_COUNT];
 			fprc = imm_buf[IMM_INDEX_COUNT + 1];
 
@@ -2053,7 +2052,7 @@ __global__ void __launch_bounds__((WORKERS_PER_HASH == 16) ? 32 : 16, 16) execut
 
 	load_buffer(vm_states_local, vm_states);
 
-	__syncwarp();
+	__syncthreads();
 
 	enum { IDX_WIDTH = (WORKERS_PER_HASH == 16) ? 16 : 8 };
 
@@ -2105,7 +2104,6 @@ __global__ void __launch_bounds__((WORKERS_PER_HASH == 16) ? 32 : 16, 16) execut
 	const uint32_t* compiled_program = (const uint32_t*)(R + (REGISTERS_SIZE + IMM_BUF_SIZE) / sizeof(uint64_t));
 
 	const uint32_t workers_mask = ((1 << WORKERS_PER_HASH) - 1) << ((threadIdx.x / IDX_WIDTH) * IDX_WIDTH);
-	const uint32_t fp_workers_mask = 3 << (((sub >> 1) << 1) + (threadIdx.x / IDX_WIDTH) * IDX_WIDTH);
 
 	#pragma unroll(1)
 	for (int ic = 0; ic < num_iterations; ++ic)
@@ -2143,7 +2141,7 @@ __global__ void __launch_bounds__((WORKERS_PER_HASH == 16) ? 32 : 16, 16) execut
 		//}
 
 		if ((WORKERS_PER_HASH == IDX_WIDTH) || (sub < WORKERS_PER_HASH))
-			inner_loop<WORKERS_PER_HASH, RANDOMX_FREQ_CFROUND ? -1 : 0, HIGH_PRECISION>(program_length, compiled_program, sub, scratchpad, fp_reg_offset, fp_reg_group_A_offset, R, imm_buf, batch_size, fprc, fp_workers_mask, xexponentMask, workers_mask);
+			inner_loop<WORKERS_PER_HASH, RANDOMX_FREQ_CFROUND ? -1 : 0, HIGH_PRECISION>(program_length, compiled_program, sub, scratchpad, fp_reg_offset, fp_reg_group_A_offset, R, imm_buf, batch_size, fprc, xexponentMask, workers_mask);
 
 		//if ((global_index == 0) && (ic == RANDOMX_PROGRAM_ITERATIONS - 1))
 		//{
