@@ -432,7 +432,12 @@ __global__ void __launch_bounds__(32, 16) init_vm(void* entropy_data, void* vm_s
 	__shared__ uint32_t execution_plan_buf[RANDOMX_PROGRAM_SIZE * WORKERS_PER_HASH * (32 / 8) * sizeof(exec_t) / sizeof(uint32_t)];
 
 	set_buffer(execution_plan_buf, 0);
+
+#	if (__CUDACC_VER_MAJOR__ >= 9)
+	__syncwarp();
+#	else
 	__syncthreads();
+#	endif
 
 	const uint32_t global_index = blockIdx.x * blockDim.x + threadIdx.x;
 	const uint32_t idx = global_index / 8;
@@ -2052,7 +2057,11 @@ __global__ void __launch_bounds__((WORKERS_PER_HASH == 16) ? 32 : 16, 16) execut
 
 	load_buffer(vm_states_local, vm_states);
 
+#	if (__CUDACC_VER_MAJOR__ >= 9)
+	__syncwarp();
+#	else
 	__syncthreads();
+#	endif
 
 	enum { IDX_WIDTH = (WORKERS_PER_HASH == 16) ? 16 : 8 };
 
