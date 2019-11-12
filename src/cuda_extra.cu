@@ -668,16 +668,7 @@ int cuda_get_deviceinfo(nvid_ctx *ctx)
             perThread += 50 * 4; // state double buffer
         }
 
-        const size_t max_intensity = limitedMemory / perThread;
-
-        ctx->device_threads = std::min<size_t>(max_intensity / ctx->device_blocks, props.maxThreadsPerMultiProcessor / 8);
-        // use only odd number of threads
-        ctx->device_threads = ctx->device_threads & 0xFFFFFFFE;
-
-        if (props.major == 2 && ctx->device_threads > 64) {
-            // Fermi gpus only support 512 threads per block (we need start 4 * configured threads)
-            ctx->device_threads = 64;
-        }
+        ctx->device_threads = ((limitedMemory / perThread) / ctx->device_blocks) & 0xFFFFFFFE;
 
         if (CnAlgo<>::base(ctx->algorithm) == Algorithm::CN_2 && props.major < 6) {
             // 4 based on my test maybe it must be adjusted later
@@ -691,6 +682,7 @@ int cuda_get_deviceinfo(nvid_ctx *ctx)
             }
         }
 
+        ctx->device_threads = std::min(ctx->device_threads, (props.major == 2 ? 64 : 128));
     }
 
     return 0;
