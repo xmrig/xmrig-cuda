@@ -1,3 +1,7 @@
+# v2.0.1-beta
+- [#10](https://github.com/xmrig/xmrig-cuda/pull/10) Fixed compatibility with CUDA 8, RandomX support not tested and potentially broken with this CUDA version.
+- [#1276](https://github.com/xmrig/xmrig/issues/1276) Fixed maximum threads count.
+
 # v2.0.0-beta
 - **ABI changed, minimum supported XMRig version now is 4.6.0.**
 - [#5](https://github.com/xmrig/xmrig-cuda/pull/5) Optimized RandomX.
