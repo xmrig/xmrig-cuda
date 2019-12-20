@@ -62,6 +62,7 @@ public:
         RX_LOKI,       // "rx/loki"          RandomXL (Loki).
         RX_ARQ,        // "rx/arq"           RandomARQ (Arqma).
         RX_SFX,        // "rx/sfx"           RandomSFX (Safex Cash).
+        RX_V,          // "rx/v"             RandomV (Monerov).
         AR2_CHUKWA,    // "argon2/chukwa"    Argon2id (Chukwa).
         AR2_WRKZ,      // "argon2/wrkz"      Argon2id (WRKZ)
         MAX
@@ -99,6 +100,7 @@ public:
         case RX_0:
         case RX_LOKI:
         case RX_SFX:
+        case RX_V:
             return 0x40000;
 
         case RX_WOW:
@@ -146,6 +148,7 @@ public:
             case RX_0:
             case RX_LOKI:
             case RX_SFX:
+            case RX_V:
                 return oneMiB * 2;
 
             case RX_WOW:
@@ -209,6 +212,7 @@ public:
         case RX_LOKI:
         case RX_ARQ:
         case RX_SFX:
+        case RX_V:
             return RANDOM_X;
 
         case AR2_CHUKWA:
