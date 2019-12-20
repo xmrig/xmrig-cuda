@@ -12,6 +12,7 @@ add_definitions(/DXMRIG_ALGO_CN_GPU)
 add_definitions(/DXMRIG_ALGO_CN_PICO)
 
 
+include(cmake/cpu.cmake)
 include(cmake/flags.cmake)
 include(cmake/CUDA.cmake)
 
