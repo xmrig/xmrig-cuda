@@ -79,8 +79,9 @@ public:
     };
 
     inline Algorithm() = default;
-    inline Algorithm(Id id) : m_id(id)                {}
-    inline Algorithm(int id) : m_id(id > INVALID && id < MAX ? static_cast<Id>(id) : INVALID) {}
+    inline Algorithm(const char *algo) : m_id(parse(algo))                                      {}
+    inline Algorithm(Id id) : m_id(id)                                                          {}
+    inline Algorithm(int id) : m_id(id > INVALID && id < MAX ? static_cast<Id>(id) : INVALID)   {}
 
     inline bool isCN() const                          { auto f = family(); return f == CN || f == CN_LITE || f == CN_HEAVY || f == CN_PICO; }
     inline bool isEqual(const Algorithm &other) const { return m_id == other.m_id; }
@@ -93,6 +94,8 @@ public:
     inline bool operator==(Algorithm::Id id) const        { return m_id == id; }
     inline bool operator==(const Algorithm &other) const  { return isEqual(other); }
     inline operator Algorithm::Id() const                 { return m_id; }
+
+    static Id parse(const char *name);
 
     size_t l2() const
     {

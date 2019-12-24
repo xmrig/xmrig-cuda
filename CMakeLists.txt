@@ -20,6 +20,7 @@ include(cmake/CUDA.cmake)
 set(SOURCES
     src/crypto/cn/c_blake256.c
     src/crypto/common/Algorithm.h
+    src/crypto/common/Algorithm.cpp
     src/CudaCryptonightR_gen.cpp
     src/version.h
     src/xmrig-cuda.cpp
