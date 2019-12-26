@@ -174,7 +174,6 @@ bool rxHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *resco
         switch (ctx->algorithm.id()) {
         case xmrig::Algorithm::RX_0:
         case xmrig::Algorithm::RX_SFX:
-        case xmrig::Algorithm::RX_V:
             RandomX_Monero::hash(ctx, startNonce, target, rescount, resnonce, ctx->rx_batch_size);
             break;
 
