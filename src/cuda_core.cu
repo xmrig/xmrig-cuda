@@ -984,4 +984,7 @@ void cryptonight_gpu_hash(nvid_ctx *ctx, const xmrig::Algorithm &algorithm, uint
     else if (algorithm.family() == Algorithm::CN_PICO) {
         cryptonight_core_gpu_hash<Algorithm::CN_PICO_0>(ctx, startNonce);
     }
+    else if (algorithm.family() == Algorithm::CN_ULTRA) {
+        cryptonight_core_gpu_hash<Algorithm::CN_ULTRA_0>(ctx, startNonce);
+    }
 }

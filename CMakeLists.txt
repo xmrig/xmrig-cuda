@@ -10,6 +10,7 @@ add_definitions(/DXMRIG_ALGO_CN_LITE)
 add_definitions(/DXMRIG_ALGO_CN_HEAVY)
 add_definitions(/DXMRIG_ALGO_CN_GPU)
 add_definitions(/DXMRIG_ALGO_CN_PICO)
+add_definitions(/DXMRIG_ALGO_CN_ULTRA)
 
 
 include(cmake/cpu.cmake)

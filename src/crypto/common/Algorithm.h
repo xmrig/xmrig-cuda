@@ -57,6 +57,7 @@ public:
         CN_HEAVY_TUBE, // "cn-heavy/tube"    CryptoNight-Heavy (modified, TUBE only).
         CN_HEAVY_XHV,  // "cn-heavy/xhv"     CryptoNight-Heavy (modified, Haven Protocol only).
         CN_PICO_0,     // "cn-pico"          CryptoNight Turtle (TRTL)
+        CN_ULTRA_0,    // "cn-ultra"         CryptoNight Talleo (TLO)
         RX_0,          // "rx/0"             RandomX (reference configuration).
         RX_WOW,        // "rx/wow"           RandomWOW (Wownero).
         RX_LOKI,       // "rx/loki"          RandomXL (Loki).
@@ -74,6 +75,7 @@ public:
         CN_LITE,
         CN_HEAVY,
         CN_PICO,
+        CN_ULTRA,
         RANDOM_X,
         ARGON2
     };
@@ -82,7 +84,7 @@ public:
     inline Algorithm(Id id) : m_id(id)                {}
     inline Algorithm(int id) : m_id(id > INVALID && id < MAX ? static_cast<Id>(id) : INVALID) {}
 
-    inline bool isCN() const                          { auto f = family(); return f == CN || f == CN_LITE || f == CN_HEAVY || f == CN_PICO; }
+    inline bool isCN() const                          { auto f = family(); return f == CN || f == CN_LITE || f == CN_HEAVY || f == CN_PICO || f == CN_ULTRA; }
     inline bool isEqual(const Algorithm &other) const { return m_id == other.m_id; }
     inline bool isValid() const                       { return m_id != INVALID; }
     inline Family family() const                      { return family(m_id); }
@@ -134,6 +136,9 @@ public:
                 return oneMiB * 4;
 
             case CN_PICO:
+                return oneMiB / 4;
+
+            case CN_ULTRA:
                 return oneMiB / 4;
 
             default:
@@ -206,6 +211,9 @@ public:
 
         case CN_PICO_0:
             return CN_PICO;
+
+        case CN_ULTRA_0:
+            return CN_ULTRA;
 
         case RX_0:
         case RX_WOW:
