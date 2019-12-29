@@ -56,13 +56,13 @@ public:
         CN_HEAVY_0,    // "cn-heavy/0"       CryptoNight-Heavy (4 MB).
         CN_HEAVY_TUBE, // "cn-heavy/tube"    CryptoNight-Heavy (modified, TUBE only).
         CN_HEAVY_XHV,  // "cn-heavy/xhv"     CryptoNight-Heavy (modified, Haven Protocol only).
-        CN_PICO_0,     // "cn-pico"          CryptoNight Turtle (TRTL)
+        CN_PICO_0,     // "cn-pico"          CryptoNight-Pico
+        CN_PICO_TLO,   // "cn-pico/tlo"      CryptoNight-Pico (TLO)
         RX_0,          // "rx/0"             RandomX (reference configuration).
         RX_WOW,        // "rx/wow"           RandomWOW (Wownero).
         RX_LOKI,       // "rx/loki"          RandomXL (Loki).
         RX_ARQ,        // "rx/arq"           RandomARQ (Arqma).
         RX_SFX,        // "rx/sfx"           RandomSFX (Safex Cash).
-        RX_V,          // "rx/v"             RandomV (Monerov).
         AR2_CHUKWA,    // "argon2/chukwa"    Argon2id (Chukwa).
         AR2_WRKZ,      // "argon2/wrkz"      Argon2id (WRKZ)
         MAX
@@ -79,8 +79,9 @@ public:
     };
 
     inline Algorithm() = default;
-    inline Algorithm(Id id) : m_id(id)                {}
-    inline Algorithm(int id) : m_id(id > INVALID && id < MAX ? static_cast<Id>(id) : INVALID) {}
+    inline Algorithm(const char *algo) : m_id(parse(algo))                                      {}
+    inline Algorithm(Id id) : m_id(id)                                                          {}
+    inline Algorithm(int id) : m_id(id > INVALID && id < MAX ? static_cast<Id>(id) : INVALID)   {}
 
     inline bool isCN() const                          { auto f = family(); return f == CN || f == CN_LITE || f == CN_HEAVY || f == CN_PICO; }
     inline bool isEqual(const Algorithm &other) const { return m_id == other.m_id; }
@@ -94,13 +95,14 @@ public:
     inline bool operator==(const Algorithm &other) const  { return isEqual(other); }
     inline operator Algorithm::Id() const                 { return m_id; }
 
+    static Id parse(const char *name);
+
     size_t l2() const
     {
         switch (m_id) {
         case RX_0:
         case RX_LOKI:
         case RX_SFX:
-        case RX_V:
             return 0x40000;
 
         case RX_WOW:
@@ -148,7 +150,6 @@ public:
             case RX_0:
             case RX_LOKI:
             case RX_SFX:
-            case RX_V:
                 return oneMiB * 2;
 
             case RX_WOW:
@@ -205,6 +206,7 @@ public:
             return CN_HEAVY;
 
         case CN_PICO_0:
+        case CN_PICO_TLO:
             return CN_PICO;
 
         case RX_0:
@@ -212,7 +214,6 @@ public:
         case RX_LOKI:
         case RX_ARQ:
         case RX_SFX:
-        case RX_V:
             return RANDOM_X;
 
         case AR2_CHUKWA:

@@ -75,11 +75,20 @@ public:
 static std::map<int, std::string> errors;
 static DatasetHost datasetHost;
 
+static const char *kUnsupportedAlgorithm = "Unsupported algorithm";
+
 
 static inline void saveError(int id, std::exception &ex)
 {
     std::lock_guard<std::mutex> lock(mutex);
     errors[id] = ex.what();
+}
+
+
+static inline void saveError(int id, const char *error)
+{
+    std::lock_guard<std::mutex> lock(mutex);
+    errors[id] = error;
 }
 
 
@@ -109,6 +118,28 @@ bool cnHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t height, uint64_t target
     }
 
     return true;
+}
+
+
+bool deviceInfo_v2(nvid_ctx *ctx, int32_t blocks, int32_t threads, const char *algo, int32_t dataset_host)
+{
+    using namespace xmrig;
+
+    if (algo != nullptr) {
+        ctx->algorithm = algo;
+
+        if (!ctx->algorithm.isValid()) {
+            saveError(ctx->device_id, kUnsupportedAlgorithm);
+
+            return false;
+        }
+    }
+
+    ctx->device_blocks   = blocks;
+    ctx->device_threads  = threads;
+    ctx->rx_dataset_host = dataset_host;
+
+    return cuda_get_deviceinfo(ctx) == 0;
 }
 
 
@@ -143,7 +174,6 @@ bool rxHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *resco
         switch (ctx->algorithm.id()) {
         case xmrig::Algorithm::RX_0:
         case xmrig::Algorithm::RX_SFX:
-        case xmrig::Algorithm::RX_V:
             RandomX_Monero::hash(ctx, startNonce, target, rescount, resnonce, ctx->rx_batch_size);
             break;
 
@@ -160,8 +190,7 @@ bool rxHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *resco
             break;
 
         default:
-            throw std::runtime_error("Unsupported algorithm");
-            break;
+            throw std::runtime_error(kUnsupportedAlgorithm);
         }
     }
     catch (std::exception &ex) {
@@ -191,14 +220,41 @@ bool rxPrepare(nvid_ctx *ctx, const void *dataset, size_t datasetSize, bool, uin
 }
 
 
-bool setJob(nvid_ctx *ctx, const void *data, size_t size, int32_t algo)
+bool setJob_v2(nvid_ctx *ctx, const void *data, size_t size, const char *algo)
 {
-    resetError(ctx->device_id);
-
     if (ctx == nullptr) {
         return false;
     }
 
+    resetError(ctx->device_id);
+    ctx->algorithm = algo;
+
+    if (!ctx->algorithm.isValid()) {
+        saveError(ctx->device_id, kUnsupportedAlgorithm);
+
+        return false;
+    }
+
+    try {
+        cryptonight_extra_cpu_set_data(ctx, data, size);
+    }
+    catch (std::exception &ex) {
+        saveError(ctx->device_id, ex);
+
+        return false;
+    }
+
+    return true;
+}
+
+
+bool setJob(nvid_ctx *ctx, const void *data, size_t size, int32_t algo)
+{
+    if (ctx == nullptr) {
+        return false;
+    }
+
+    resetError(ctx->device_id);
     ctx->algorithm = algo;
 
     try {
@@ -299,7 +355,7 @@ int32_t deviceInt(nvid_ctx *ctx, DeviceProperty property)
 
     default:
         break;
-    };
+    }
 
     return 0;
 }

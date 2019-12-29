@@ -420,7 +420,7 @@ void cryptonight_extra_cpu_prepare(nvid_ctx *ctx, uint32_t startNonce, const xmr
     } else if (algorithm == Algorithm::CN_R) {
         CUDA_CHECK_KERNEL(ctx->device_id, cryptonight_extra_gpu_prepare<Algorithm::CN_R> << <grid, block >> > (wsize, ctx->d_input, ctx->inputlen, startNonce,
             ctx->d_ctx_state, ctx->d_ctx_state2, ctx->d_ctx_a, ctx->d_ctx_b, ctx->d_ctx_key1, ctx->d_ctx_key2));
-    } else if (CnAlgo<>::base(algorithm) == Algorithm::CN_2 || algorithm == Algorithm::CN_PICO_0) {
+    } else if (CnAlgo<>::base(algorithm) == Algorithm::CN_2 || algorithm == Algorithm::CN_PICO_0 || algorithm == Algorithm::CN_PICO_TLO) {
         CUDA_CHECK_KERNEL(ctx->device_id, cryptonight_extra_gpu_prepare<Algorithm::CN_2><<<grid, block >>>(wsize, ctx->d_input, ctx->inputlen, startNonce,
             ctx->d_ctx_state, ctx->d_ctx_state2, ctx->d_ctx_a, ctx->d_ctx_b, ctx->d_ctx_key1, ctx->d_ctx_key2));
     } else {

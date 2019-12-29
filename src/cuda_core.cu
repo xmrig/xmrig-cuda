@@ -982,6 +982,17 @@ void cryptonight_gpu_hash(nvid_ctx *ctx, const xmrig::Algorithm &algorithm, uint
         }
     }
     else if (algorithm.family() == Algorithm::CN_PICO) {
-        cryptonight_core_gpu_hash<Algorithm::CN_PICO_0>(ctx, startNonce);
+        switch (algorithm.id()) {
+        case Algorithm::CN_PICO_0:
+            cryptonight_core_gpu_hash<Algorithm::CN_PICO_0>(ctx, startNonce);
+            break;
+
+        case Algorithm::CN_PICO_TLO:
+            cryptonight_core_gpu_hash<Algorithm::CN_PICO_TLO>(ctx, startNonce);
+            break;
+
+        default:
+            break;
+        }
     }
 }
