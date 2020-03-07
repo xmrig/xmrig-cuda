@@ -131,6 +131,8 @@ set(CUDA_RANDOMX_SOURCES
     src/RandomX/blake2b_cuda.hpp
     src/RandomX/common.hpp
     src/RandomX/hash.hpp
+    src/RandomX/keva/configuration.h
+    src/RandomX/keva/randomx_keva.cu
     src/RandomX/loki/configuration.h
     src/RandomX/loki/randomx_loki.cu
     src/RandomX/monero/configuration.h
