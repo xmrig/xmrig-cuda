@@ -6,8 +6,8 @@
  * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
  * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
  * Copyright 2018      Lee Clagett <https://github.com/vtnerd>
- * Copyright 2018-2019 SChernykh   <https://github.com/SChernykh>
- * Copyright 2016-2019 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright 2018-2020 SChernykh   <https://github.com/SChernykh>
+ * Copyright 2016-2020 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -63,8 +63,10 @@ public:
         RX_LOKI,       // "rx/loki"          RandomXL (Loki).
         RX_ARQ,        // "rx/arq"           RandomARQ (Arqma).
         RX_SFX,        // "rx/sfx"           RandomSFX (Safex Cash).
+        RX_KEVA,       // "rx/keva"          RandomKV (Keva).
         AR2_CHUKWA,    // "argon2/chukwa"    Argon2id (Chukwa).
         AR2_WRKZ,      // "argon2/wrkz"      Argon2id (WRKZ)
+        ASTROBWT_DERO, // "astrobwt"         AstroBWT (Dero)
         MAX
     };
 
@@ -106,6 +108,7 @@ public:
             return 0x40000;
 
         case RX_WOW:
+        case RX_KEVA:
             return 0x20000;
 
         case RX_ARQ:
@@ -153,6 +156,7 @@ public:
                 return oneMiB * 2;
 
             case RX_WOW:
+            case RX_KEVA:
                 return oneMiB;
 
             case RX_ARQ:
@@ -214,6 +218,7 @@ public:
         case RX_LOKI:
         case RX_ARQ:
         case RX_SFX:
+        case RX_KEVA:
             return RANDOM_X;
 
         case AR2_CHUKWA:
