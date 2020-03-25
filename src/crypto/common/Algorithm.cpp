@@ -6,8 +6,8 @@
  * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
  * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
  * Copyright 2018      Lee Clagett <https://github.com/vtnerd>
- * Copyright 2018-2020 SChernykh   <https://github.com/SChernykh>
- * Copyright 2016-2020 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright 2018-2019 SChernykh   <https://github.com/SChernykh>
+ * Copyright 2016-2019 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -25,6 +25,8 @@
 
 
 #include "crypto/common/Algorithm.h"
+
+
 #include "crypto/cn/CnAlgo.h"
 
 
@@ -55,7 +57,6 @@ static AlgoName const algorithm_names[] = {
     { "rx/loki",          Algorithm::RX_LOKI         },
     { "rx/arq",           Algorithm::RX_ARQ          },
     { "rx/sfx",           Algorithm::RX_SFX          },
-    { "rx/keva",          Algorithm::RX_KEVA         },
     { "cn/0",             Algorithm::CN_0            },
     { "cn/1",             Algorithm::CN_1            },
     { "cn/2",             Algorithm::CN_2            },
