@@ -189,10 +189,6 @@ bool rxHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *resco
             RandomX_Arqma::hash(ctx, startNonce, target, rescount, resnonce, ctx->rx_batch_size);
             break;
 
-        case xmrig::Algorithm::RX_KEVA:
-            RandomX_Keva::hash(ctx, startNonce, target, rescount, resnonce, ctx->rx_batch_size);
-            break;
-
         default:
             throw std::runtime_error(kUnsupportedAlgorithm);
         }
