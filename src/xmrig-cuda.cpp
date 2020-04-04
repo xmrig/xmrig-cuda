@@ -5,8 +5,8 @@
  * Copyright 2014-2016 Wolf9466    <https://github.com/OhGodAPet>
  * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
  * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
- * Copyright 2018-2019 SChernykh   <https://github.com/SChernykh>
- * Copyright 2016-2019 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright 2018-2020 SChernykh   <https://github.com/SChernykh>
+ * Copyright 2016-2020 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -224,6 +224,47 @@ bool rxPrepare(nvid_ctx *ctx, const void *dataset, size_t datasetSize, bool, uin
 }
 
 
+bool AstroBWTHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce)
+{
+    resetError(ctx->device_id);
+
+    try {
+        switch (ctx->algorithm.id()) {
+        case xmrig::Algorithm::ASTROBWT_DERO:
+            AstroBWT_Dero::hash(ctx, startNonce, target, rescount, resnonce);
+            break;
+
+        default:
+            throw std::runtime_error(kUnsupportedAlgorithm);
+        }
+    }
+    catch (std::exception &ex) {
+        saveError(ctx->device_id, ex);
+
+        return false;
+    }
+
+    return true;
+}
+
+
+bool AstroBWTPrepare(nvid_ctx *ctx, uint32_t batchSize)
+{
+    resetError(ctx->device_id);
+
+    try {
+        astrobwt_prepare(ctx, batchSize);
+    }
+    catch (std::exception &ex) {
+        saveError(ctx->device_id, ex);
+
+        return false;
+    }
+
+    return true;
+}
+
+
 bool setJob_v2(nvid_ctx *ctx, const void *data, size_t size, const char *algo)
 {
     if (ctx == nullptr) {
@@ -357,6 +398,10 @@ int32_t deviceInt(nvid_ctx *ctx, DeviceProperty property)
     case DeviceDatasetHost:
         return ctx->rx_dataset_host;
 
+    case DeviceAstroBWTProcessedHashes:
+        // ~0.5% of all hashes are invalid
+        return static_cast<int32_t>(ctx->astrobwt_processed_hashes * 0.995);
+
     default:
         break;
     }
@@ -466,6 +511,14 @@ void release(nvid_ctx *ctx)
     cudaFree(ctx->d_rx_entropy);
     cudaFree(ctx->d_rx_vm_states);
     cudaFree(ctx->d_rx_rounding);
+
+    cudaFree(ctx->astrobwt_salsa20_keys);
+    cudaFree(ctx->astrobwt_bwt_data);
+    cudaFree(ctx->astrobwt_bwt_data_sizes);
+    cudaFree(ctx->astrobwt_indices);
+    cudaFree(ctx->astrobwt_tmp_indices);
+    cudaFree(ctx->astrobwt_filtered_hashes);
+    cudaFree(ctx->astrobwt_shares);
 
     cuModuleUnload(ctx->module);
 
