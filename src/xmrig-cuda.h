@@ -5,8 +5,8 @@
  * Copyright 2014-2016 Wolf9466    <https://github.com/OhGodAPet>
  * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
  * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
- * Copyright 2018-2019 SChernykh   <https://github.com/SChernykh>
- * Copyright 2016-2019 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright 2018-2020 SChernykh   <https://github.com/SChernykh>
+ * Copyright 2016-2020 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -83,8 +83,8 @@ XMRIG_EXPORT bool deviceInfo_v2(nvid_ctx *ctx, int32_t blocks, int32_t threads, 
 XMRIG_EXPORT bool deviceInit(nvid_ctx *ctx);
 XMRIG_EXPORT bool rxHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce);
 XMRIG_EXPORT bool rxPrepare(nvid_ctx *ctx, const void *dataset, size_t datasetSize, bool dataset_host, uint32_t batchSize);
-XMRIG_EXPORT bool AstroBWTHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce);
-XMRIG_EXPORT bool AstroBWTPrepare(nvid_ctx *ctx, uint32_t batchSize);
+XMRIG_EXPORT bool astroBWTHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce);
+XMRIG_EXPORT bool astroBWTPrepare(nvid_ctx *ctx, uint32_t batchSize);
 XMRIG_EXPORT bool setJob_v2(nvid_ctx *ctx, const void *data, size_t size, const char *algo);
 XMRIG_EXPORT bool setJob(nvid_ctx *ctx, const void *data, size_t size, int32_t algo);
 XMRIG_EXPORT const char *deviceName(nvid_ctx *ctx);

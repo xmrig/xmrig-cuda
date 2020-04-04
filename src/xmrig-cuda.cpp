@@ -224,7 +224,7 @@ bool rxPrepare(nvid_ctx *ctx, const void *dataset, size_t datasetSize, bool, uin
 }
 
 
-bool AstroBWTHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce)
+bool astroBWTHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce)
 {
     resetError(ctx->device_id);
 
@@ -248,7 +248,7 @@ bool AstroBWTHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t 
 }
 
 
-bool AstroBWTPrepare(nvid_ctx *ctx, uint32_t batchSize)
+bool astroBWTPrepare(nvid_ctx *ctx, uint32_t batchSize)
 {
     resetError(ctx->device_id);
 
