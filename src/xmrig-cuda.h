@@ -69,6 +69,7 @@ enum DeviceProperty : uint32_t
     DevicePciDeviceID,
     DevicePciDomainID,
     DeviceDatasetHost,
+    DeviceAstroBWTProcessedHashes,
 };
 
 
@@ -82,6 +83,8 @@ XMRIG_EXPORT bool deviceInfo_v2(nvid_ctx *ctx, int32_t blocks, int32_t threads, 
 XMRIG_EXPORT bool deviceInit(nvid_ctx *ctx);
 XMRIG_EXPORT bool rxHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce);
 XMRIG_EXPORT bool rxPrepare(nvid_ctx *ctx, const void *dataset, size_t datasetSize, bool dataset_host, uint32_t batchSize);
+XMRIG_EXPORT bool AstroBWTHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce);
+XMRIG_EXPORT bool AstroBWTPrepare(nvid_ctx *ctx, uint32_t batchSize);
 XMRIG_EXPORT bool setJob_v2(nvid_ctx *ctx, const void *data, size_t size, const char *algo);
 XMRIG_EXPORT bool setJob(nvid_ctx *ctx, const void *data, size_t size, int32_t algo);
 XMRIG_EXPORT const char *deviceName(nvid_ctx *ctx);
