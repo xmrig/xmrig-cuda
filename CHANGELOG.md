@@ -1,3 +1,6 @@
+# v2.2.0
+- [#1578](https://github.com/xmrig/xmrig/pull/1578) Added new `rx/keva` algorithm for upcoming Kevacoin fork.
+
 # v2.1.0
 - [#1466](https://github.com/xmrig/xmrig/pull/1466) Added `cn-pico/tlo` algorithm.
 - Added alternative relaxed API (algorithm passed as string).
