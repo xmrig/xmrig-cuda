@@ -1,3 +1,7 @@
+# v3.0.0
+- **ABI changed, minimum supported XMRig version now is 5.11.0.**
+- [#41](https://github.com/xmrig/xmrig-cuda/pull/41) Added AstroBWT algorithm support.
+
 # v2.2.0
 - [#1578](https://github.com/xmrig/xmrig/pull/1578) Added new `rx/keva` algorithm for upcoming Kevacoin fork.
 
