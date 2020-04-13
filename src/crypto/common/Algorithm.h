@@ -77,7 +77,8 @@ public:
         CN_HEAVY,
         CN_PICO,
         RANDOM_X,
-        ARGON2
+        ARGON2,
+        ASTROBWT
     };
 
     inline Algorithm() = default;
@@ -180,6 +181,16 @@ public:
             }
         }
 
+        if (f == ASTROBWT) {
+            switch (m_id) {
+            case ASTROBWT_DERO:
+                return (oneMiB * 19) / 2;
+
+            default:
+                break;
+            }
+        }
+
         return 0;
     }
 
@@ -224,6 +235,9 @@ public:
         case AR2_CHUKWA:
         case AR2_WRKZ:
             return ARGON2;
+
+        case ASTROBWT_DERO:
+            return ASTROBWT;
 
         default:
             break;

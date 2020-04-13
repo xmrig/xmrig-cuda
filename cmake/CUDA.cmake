@@ -143,6 +143,13 @@ set(CUDA_RANDOMX_SOURCES
     src/RandomX/wownero/randomx_wownero.cu
 )
 
+set(CUDA_ASTROBWT_SOURCES
+    src/AstroBWT/dero/AstroBWT.cu
+    src/AstroBWT/dero/BWT.h
+    src/AstroBWT/dero/salsa20.h
+    src/AstroBWT/dero/sha3.h
+)
+
 set(CUDA_SOURCES
     src/cryptonight.h
     src/cuda_aes.hpp
@@ -159,11 +166,11 @@ set(CUDA_SOURCES
 )
 
 if("${CUDA_COMPILER}" STREQUAL "clang")
-    add_library(xmrig-cu STATIC ${CUDA_SOURCES} ${CUDA_RANDOMX_SOURCES})
+    add_library(xmrig-cu STATIC ${CUDA_SOURCES} ${CUDA_RANDOMX_SOURCES} ${CUDA_ASTROBWT_SOURCES})
 
     set_target_properties(xmrig-cu PROPERTIES COMPILE_FLAGS ${CLANG_BUILD_FLAGS})
     set_target_properties(xmrig-cu PROPERTIES LINKER_LANGUAGE CXX)
     set_source_files_properties(${CUDA_SOURCES} ${CUDA_RANDOMX_SOURCES} PROPERTIES LANGUAGE CXX)
 else()
-    cuda_add_library(xmrig-cu STATIC ${CUDA_SOURCES} ${CUDA_RANDOMX_SOURCES})
+    cuda_add_library(xmrig-cu STATIC ${CUDA_SOURCES} ${CUDA_RANDOMX_SOURCES} ${CUDA_ASTROBWT_SOURCES})
 endif()

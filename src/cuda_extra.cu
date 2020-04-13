@@ -327,7 +327,12 @@ __global__ void cryptonight_gpu_extra_gpu_final( int threads, uint64_t target, u
 void cryptonight_extra_cpu_set_data(nvid_ctx *ctx, const void *data, size_t len)
 {
     ctx->inputlen = static_cast<unsigned int>(len);
-    CUDA_CHECK(ctx->device_id, cudaMemcpy(ctx->d_input, data, len, cudaMemcpyHostToDevice));
+
+    // Use temporary 200 byte buffer with zeros in the end (required for AstroBWT)
+    uint8_t buf[200] = {};
+    memcpy(buf, data, len);
+
+    CUDA_CHECK(ctx->device_id, cudaMemcpy(ctx->d_input, buf, sizeof(buf), cudaMemcpyHostToDevice));
 }
 
 
@@ -381,7 +386,7 @@ int cryptonight_extra_cpu_init(nvid_ctx *ctx, const xmrig::Algorithm &algorithm,
     }
 
     // POW block format http://monero.wikia.com/wiki/PoW_Block_Header_Format
-    CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_input,        32 * sizeof (uint32_t)));
+    CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_input,        200));
     CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_result_count, sizeof (uint32_t)));
     CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_result_nonce, 10 * sizeof (uint32_t)));
 
@@ -586,6 +591,11 @@ int cuda_get_deviceinfo(nvid_ctx *ctx)
         if (ctx->device_blocks > max_blocks) {
             ctx->device_blocks = max_blocks;
         }
+    }
+
+    if ((ctx->algorithm.family() == Algorithm::ASTROBWT) && ((ctx->device_blocks < 0) || (ctx->device_threads < 0))) {
+        ctx->device_threads = 32;
+        ctx->device_blocks = freeMemory / (ctx->algorithm.l3() * 32);
     }
 
     // set all device option those marked as auto (-1) to a valid value
