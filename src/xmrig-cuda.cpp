@@ -265,6 +265,47 @@ bool astroBWTPrepare(nvid_ctx *ctx, uint32_t batchSize)
 }
 
 
+bool KawPowHash(nvid_ctx *ctx, uint8_t* job_blob, uint64_t target, uint32_t *rescount, uint32_t *resnonce)
+{
+    resetError(ctx->device_id);
+
+    try {
+        switch (ctx->algorithm.id()) {
+        case xmrig::Algorithm::KAWPOW_RVN:
+            KawPow_Raven::hash(ctx, job_blob, target, rescount, resnonce);
+            break;
+
+        default:
+            throw std::runtime_error(kUnsupportedAlgorithm);
+        }
+    }
+    catch (std::exception &ex) {
+        saveError(ctx->device_id, ex);
+
+        return false;
+    }
+
+    return true;
+}
+
+
+bool KawPowPrepare(nvid_ctx *ctx, const void* cache, size_t cache_size, size_t dag_size, uint32_t height, const uint64_t* dag_sizes)
+{
+    resetError(ctx->device_id);
+
+    try {
+        kawpow_prepare(ctx, cache, cache_size, dag_size, height, dag_sizes);
+    }
+    catch (std::exception &ex) {
+        saveError(ctx->device_id, ex);
+
+        return false;
+    }
+
+    return true;
+}
+
+
 bool setJob_v2(nvid_ctx *ctx, const void *data, size_t size, const char *algo)
 {
     if (ctx == nullptr) {
