@@ -265,7 +265,7 @@ bool astroBWTPrepare(nvid_ctx *ctx, uint32_t batchSize)
 }
 
 
-bool KawPowHash(nvid_ctx *ctx, uint8_t* job_blob, uint64_t target, uint32_t *rescount, uint32_t *resnonce)
+bool kawPowHash(nvid_ctx *ctx, uint8_t* job_blob, uint64_t target, uint32_t *rescount, uint32_t *resnonce)
 {
     resetError(ctx->device_id);
 
@@ -289,7 +289,7 @@ bool KawPowHash(nvid_ctx *ctx, uint8_t* job_blob, uint64_t target, uint32_t *res
 }
 
 
-bool KawPowPrepare(nvid_ctx *ctx, const void* cache, size_t cache_size, size_t dag_size, uint32_t height, const uint64_t* dag_sizes)
+bool kawPowPrepare(nvid_ctx *ctx, const void* cache, size_t cache_size, size_t dag_size, uint32_t height, const uint64_t* dag_sizes)
 {
     resetError(ctx->device_id);
 
