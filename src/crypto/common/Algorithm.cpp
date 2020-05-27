@@ -67,7 +67,6 @@ static AlgoName const algorithm_names[] = {
     { "cn/rwz",           Algorithm::CN_RWZ          },
     { "cn/zls",           Algorithm::CN_ZLS          },
     { "cn/double",        Algorithm::CN_DOUBLE       },
-    { "cn/gpu",           Algorithm::CN_GPU          },
     { "cn-lite/0",        Algorithm::CN_LITE_0       },
     { "cn-lite/1",        Algorithm::CN_LITE_1       },
     { "cn-heavy/0",       Algorithm::CN_HEAVY_0      },
@@ -75,7 +74,8 @@ static AlgoName const algorithm_names[] = {
     { "cn-heavy/tube",    Algorithm::CN_HEAVY_TUBE   },
     { "cn-pico",          Algorithm::CN_PICO_0       },
     { "cn-pico/tlo",      Algorithm::CN_PICO_TLO     },
-    { "astrobwt",         Algorithm::ASTROBWT_DERO   },
+    { "kawpow",           Algorithm::KAWPOW_RVN      },
+    { "kawpow/rvn",       Algorithm::KAWPOW_RVN      },
 };
 
 
