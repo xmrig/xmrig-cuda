@@ -265,14 +265,14 @@ bool astroBWTPrepare(nvid_ctx *ctx, uint32_t batchSize)
 }
 
 
-bool kawPowHash(nvid_ctx *ctx, uint8_t* job_blob, uint64_t target, uint32_t *rescount, uint32_t *resnonce)
+bool kawPowHash(nvid_ctx *ctx, uint8_t* job_blob, uint64_t target, uint32_t *rescount, uint32_t *resnonce, uint32_t *skipped_hashes)
 {
     resetError(ctx->device_id);
 
     try {
         switch (ctx->algorithm.id()) {
         case xmrig::Algorithm::KAWPOW_RVN:
-            KawPow_Raven::hash(ctx, job_blob, target, rescount, resnonce);
+            KawPow_Raven::hash(ctx, job_blob, target, rescount, resnonce, skipped_hashes);
             break;
 
         default:
@@ -295,6 +295,21 @@ bool kawPowPrepare(nvid_ctx *ctx, const void* cache, size_t cache_size, size_t d
 
     try {
         kawpow_prepare(ctx, cache, cache_size, dag_size, height, dag_sizes);
+    }
+    catch (std::exception &ex) {
+        saveError(ctx->device_id, ex);
+
+        return false;
+    }
+
+    return true;
+}
+
+
+bool kawPowStopHash(nvid_ctx *ctx)
+{
+    try {
+        kawpow_stop_hash(ctx);
     }
     catch (std::exception &ex) {
         saveError(ctx->device_id, ex);
@@ -561,7 +576,12 @@ void release(nvid_ctx *ctx)
     cudaFree(ctx->astrobwt_filtered_hashes);
     cudaFree(ctx->astrobwt_shares);
 
+    cudaFree(ctx->kawpow_cache);
+    cudaFree(ctx->kawpow_dag);
+    cudaFree(ctx->kawpow_stop);
+
     cuModuleUnload(ctx->module);
+    cuModuleUnload(ctx->kawpow_module);
 
     cuCtxDestroy(ctx->cuContext);
 

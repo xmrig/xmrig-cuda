@@ -194,8 +194,16 @@ __device__ __forceinline__ void fill_mix(uint32_t* hash_seed, uint32_t lane_id, 
         mix[i] = kiss99(st);
 }
 
-__global__ void progpow_search(const dag_t *g_dag, const uint32_t* job_blob, const uint64_t target, bool hack_false, uint32_t* results)
+__global__ void progpow_search(const dag_t *g_dag, const uint32_t* job_blob, const uint64_t target, bool hack_false, uint32_t* results, uint32_t* stop)
 {
+    if (*stop) {
+        if (threadIdx.x == 0) {
+            // Count groups of skipped hashes (if we don't count them we'll break hashrate display)
+            atomicAdd(stop + 1, blockDim.x);
+        }
+        return;
+    }
+
     __shared__ uint32_t c_dag[PROGPOW_CACHE_WORDS];
 
     uint32_t gid = blockIdx.x * blockDim.x + threadIdx.x;
@@ -208,9 +216,6 @@ __global__ void progpow_search(const dag_t *g_dag, const uint32_t* job_blob, con
         for (int i = 0; i < PROGPOW_DAG_LOADS; ++i)
             c_dag[word + i] =  load.s[i];
     }
-
-    // Force threads to sync and ensure shared mem is in sync
-    __syncthreads();
 
     uint32_t hash_seed[2];  // KISS99 initiator
     hash32_t digest;        // Carry-over from mix output
@@ -241,7 +246,8 @@ __global__ void progpow_search(const dag_t *g_dag, const uint32_t* job_blob, con
             state2[i] = state[i];
     }
 
-
+    // Force threads to sync and ensure shared mem is in sync
+    __syncthreads();
 
     #pragma unroll 1
     for (uint32_t h = 0; h < PROGPOW_LANES; h++)
@@ -306,6 +312,8 @@ __global__ void progpow_search(const dag_t *g_dag, const uint32_t* job_blob, con
 
     // Check result vs target
     if (result < target) {
+        *stop = 1;
+
         const uint32_t index = atomicAdd(results, 1U) + 1U;
         if (index <= 15) {
             results[index] = gid;
