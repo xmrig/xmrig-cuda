@@ -100,6 +100,8 @@ struct nvid_ctx {
     size_t kawpow_dag_size              = 0;
     size_t kawpow_dag_capacity          = 0;
 
+    uint32_t* kawpow_stop               = nullptr;
+
     uint32_t kawpow_period              = 0;
     CUmodule kawpow_module              = nullptr;
     CUfunction kawpow_kernel            = nullptr;
@@ -129,5 +131,6 @@ void astrobwt_prepare(nvid_ctx *ctx, uint32_t batch_size);
 namespace AstroBWT_Dero   { void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce); }
 
 void kawpow_prepare(nvid_ctx *ctx, const void* cache, size_t cache_size, size_t dag_size, uint32_t height, const uint64_t* dag_sizes);
+void kawpow_stop_hash(nvid_ctx *ctx);
 
-namespace KawPow_Raven    { void hash(nvid_ctx *ctx, uint8_t* job_blob, uint64_t target, uint32_t *rescount, uint32_t *resnonce); }
+namespace KawPow_Raven    { void hash(nvid_ctx *ctx, uint8_t* job_blob, uint64_t target, uint32_t *rescount, uint32_t *resnonce, uint32_t *skipped_hashes); }
