@@ -74,6 +74,8 @@ static AlgoName const algorithm_names[] = {
     { "cn-heavy/tube",    Algorithm::CN_HEAVY_TUBE   },
     { "cn-pico",          Algorithm::CN_PICO_0       },
     { "cn-pico/tlo",      Algorithm::CN_PICO_TLO     },
+    { "astrobwt",         Algorithm::ASTROBWT_DERO   },
+    { "astrobwt/dero",    Algorithm::ASTROBWT_DERO   },
     { "kawpow",           Algorithm::KAWPOW_RVN      },
     { "kawpow/rvn",       Algorithm::KAWPOW_RVN      },
 };
