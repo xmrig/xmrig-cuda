@@ -265,6 +265,62 @@ bool astroBWTPrepare(nvid_ctx *ctx, uint32_t batchSize)
 }
 
 
+bool kawPowHash(nvid_ctx *ctx, uint8_t* job_blob, uint64_t target, uint32_t *rescount, uint32_t *resnonce, uint32_t *skipped_hashes)
+{
+    resetError(ctx->device_id);
+
+    try {
+        switch (ctx->algorithm.id()) {
+        case xmrig::Algorithm::KAWPOW_RVN:
+            KawPow_Raven::hash(ctx, job_blob, target, rescount, resnonce, skipped_hashes);
+            break;
+
+        default:
+            throw std::runtime_error(kUnsupportedAlgorithm);
+        }
+    }
+    catch (std::exception &ex) {
+        saveError(ctx->device_id, ex);
+
+        return false;
+    }
+
+    return true;
+}
+
+
+bool kawPowPrepare(nvid_ctx *ctx, const void* cache, size_t cache_size, size_t dag_size, uint32_t height, const uint64_t* dag_sizes)
+{
+    resetError(ctx->device_id);
+
+    try {
+        kawpow_prepare(ctx, cache, cache_size, dag_size, height, dag_sizes);
+    }
+    catch (std::exception &ex) {
+        saveError(ctx->device_id, ex);
+
+        return false;
+    }
+
+    return true;
+}
+
+
+bool kawPowStopHash(nvid_ctx *ctx)
+{
+    try {
+        kawpow_stop_hash(ctx);
+    }
+    catch (std::exception &ex) {
+        saveError(ctx->device_id, ex);
+
+        return false;
+    }
+
+    return true;
+}
+
+
 bool setJob_v2(nvid_ctx *ctx, const void *data, size_t size, const char *algo)
 {
     if (ctx == nullptr) {
@@ -438,7 +494,7 @@ uint32_t version(Version version)
 {
     switch (version) {
     case ApiVersion:
-        return APP_VER_MAJOR;
+        return API_VERSION;
 
     case DriverVersion:
         return static_cast<uint32_t>(cuda_get_driver_version());
@@ -520,7 +576,12 @@ void release(nvid_ctx *ctx)
     cudaFree(ctx->astrobwt_filtered_hashes);
     cudaFree(ctx->astrobwt_shares);
 
+    cudaFree(ctx->kawpow_cache);
+    cudaFree(ctx->kawpow_dag);
+    cudaFree(ctx->kawpow_stop);
+
     cuModuleUnload(ctx->module);
+    cuModuleUnload(ctx->kawpow_module);
 
     cuCtxDestroy(ctx->cuContext);
 

@@ -85,6 +85,9 @@ XMRIG_EXPORT bool rxHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, ui
 XMRIG_EXPORT bool rxPrepare(nvid_ctx *ctx, const void *dataset, size_t datasetSize, bool dataset_host, uint32_t batchSize);
 XMRIG_EXPORT bool astroBWTHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce);
 XMRIG_EXPORT bool astroBWTPrepare(nvid_ctx *ctx, uint32_t batchSize);
+XMRIG_EXPORT bool kawPowHash(nvid_ctx *ctx, uint8_t* job_blob, uint64_t target, uint32_t *rescount, uint32_t *resnonce, uint32_t *skipped_hashes);
+XMRIG_EXPORT bool kawPowPrepare(nvid_ctx *ctx, const void* cache, size_t cache_size, size_t dag_size, uint32_t height, const uint64_t* dag_sizes);
+XMRIG_EXPORT bool kawPowStopHash(nvid_ctx *ctx);
 XMRIG_EXPORT bool setJob_v2(nvid_ctx *ctx, const void *data, size_t size, const char *algo);
 XMRIG_EXPORT bool setJob(nvid_ctx *ctx, const void *data, size_t size, int32_t algo);
 XMRIG_EXPORT const char *deviceName(nvid_ctx *ctx);
