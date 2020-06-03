@@ -575,6 +575,8 @@ void release(nvid_ctx *ctx)
     cudaFree(ctx->astrobwt_tmp_indices);
     cudaFree(ctx->astrobwt_filtered_hashes);
     cudaFree(ctx->astrobwt_shares);
+    cudaFree(ctx->astrobwt_offsets_begin);
+    cudaFree(ctx->astrobwt_offsets_end);
 
     cudaFree(ctx->kawpow_cache);
     cudaFree(ctx->kawpow_dag);

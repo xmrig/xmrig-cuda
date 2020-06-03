@@ -91,6 +91,8 @@ struct nvid_ctx {
     void* astrobwt_tmp_indices          = nullptr;
     void* astrobwt_filtered_hashes      = nullptr;
     void* astrobwt_shares               = nullptr;
+    void* astrobwt_offsets_begin        = nullptr;
+    void* astrobwt_offsets_end          = nullptr;
 
     void* kawpow_cache                  = nullptr;
     size_t kawpow_cache_size            = 0;
