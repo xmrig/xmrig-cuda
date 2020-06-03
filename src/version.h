@@ -37,4 +37,6 @@
 #define APP_VER_MINOR  0
 #define APP_VER_PATCH  0
 
+#define API_VERSION    3
+
 #endif /* XMRIG_VERSION_H */
