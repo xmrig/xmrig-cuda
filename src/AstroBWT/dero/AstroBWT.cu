@@ -43,7 +43,7 @@ __device__ void sync()
 #include "sha3.h"
 #include "salsa20.h"
 #include "BWT.h"
-#include "cub/device/device_segmented_radix_sort.cuh"
+#include "3rdparty/cub/device/device_segmented_radix_sort.cuh"
 
 
 static constexpr uint32_t BWT_DATA_MAX_SIZE = 560 * 1024 - 256;
@@ -93,9 +93,9 @@ template<uint32_t DATA_STRIDE>
 static void BWT(nvid_ctx *ctx, uint32_t global_work_size, uint32_t BWT_ALLOCATION_SIZE)
 {
     uint32_t* keys_in = (uint32_t*)ctx->astrobwt_indices;
-    uint32_t* values_in = keys_in + BWT_ALLOCATION_SIZE;
+    uint16_t* values_in = (uint16_t*)(keys_in + BWT_ALLOCATION_SIZE);
 
-    BWT_preprocess<<<global_work_size, 1024>>>(
+    CUDA_CHECK_KERNEL(ctx->device_id, BWT_preprocess<<<global_work_size, 1024>>>(
         (uint8_t*)ctx->astrobwt_bwt_data,
         (uint32_t*)ctx->astrobwt_bwt_data_sizes,
         DATA_STRIDE,
@@ -103,16 +103,16 @@ static void BWT(nvid_ctx *ctx, uint32_t global_work_size, uint32_t BWT_ALLOCATIO
         values_in,
         (uint32_t*)ctx->astrobwt_offsets_begin,
         (uint32_t*)ctx->astrobwt_offsets_end
-    );
+    ));
 
     size_t temp_storage_bytes = BWT_ALLOCATION_SIZE * sizeof(uint64_t) + 65536;
     cub::DeviceSegmentedRadixSort::SortPairs(
         ctx->astrobwt_tmp_indices,
         temp_storage_bytes,
-        (uint32_t*)keys_in,
-        (uint32_t*)keys_in,
-        (uint32_t*)values_in,
-        (uint32_t*)values_in,
+        keys_in,
+        keys_in,
+        values_in,
+        values_in,
         global_work_size * DATA_STRIDE,
         global_work_size,
         (uint32_t*)ctx->astrobwt_offsets_begin,
@@ -121,14 +121,21 @@ static void BWT(nvid_ctx *ctx, uint32_t global_work_size, uint32_t BWT_ALLOCATIO
         32
     );
 
-    BWT_fix_order<8><<<global_work_size, 1024>>>((uint32_t*)ctx->astrobwt_bwt_data_sizes, DATA_STRIDE, keys_in, values_in);
-
-    BWT_apply<DATA_STRIDE><<<(global_work_size * DATA_STRIDE) / 1024, 1024>>>(
+    CUDA_CHECK_KERNEL(ctx->device_id, BWT_fix_order<8><<<global_work_size, 1024>>>(
         (uint8_t*)ctx->astrobwt_bwt_data,
         (uint32_t*)ctx->astrobwt_bwt_data_sizes,
+        DATA_STRIDE,
+        keys_in,
+        values_in
+    ));
+
+    CUDA_CHECK_KERNEL(ctx->device_id, BWT_apply<DATA_STRIDE><<<(global_work_size * DATA_STRIDE) / 1024, 1024>>>(
+        (uint8_t*)ctx->astrobwt_bwt_data,
+        (uint32_t*)ctx->astrobwt_bwt_data_sizes,
+        keys_in,
         values_in,
         (uint64_t*)ctx->astrobwt_tmp_indices
-    );
+    ));
 }
 
 void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce)

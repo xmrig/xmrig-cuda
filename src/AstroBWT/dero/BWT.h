@@ -30,7 +30,7 @@ namespace AstroBWT_Dero {
 constexpr int STAGE1_SIZE = 147253;
 
 __global__ __launch_bounds__(1024)
-void BWT_preprocess(const uint8_t* datas, const uint32_t* data_sizes, uint32_t data_stride, uint32_t* keys_in, uint32_t* values_in, uint32_t* offsets_begin, uint32_t* offsets_end)
+void BWT_preprocess(const uint8_t* datas, const uint32_t* data_sizes, uint32_t data_stride, uint32_t* keys_in, uint16_t* values_in, uint32_t* offsets_begin, uint32_t* offsets_end)
 {
 	const uint32_t tid = threadIdx.x;
 	const uint32_t gid = blockIdx.x;
@@ -49,60 +49,62 @@ void BWT_preprocess(const uint8_t* datas, const uint32_t* data_sizes, uint32_t d
 
 	for (uint32_t i = tid; i < N; i += group_size)
 	{
-		union {
-			uint8_t key_bytes[8];
-			uint32_t key[2];
-		};
+		keys_in[i] =
+			(static_cast<uint32_t>(input[i + 0]) << 24) |
+			(static_cast<uint32_t>(input[i + 1]) << 16) |
+			(static_cast<uint32_t>(input[i + 2]) << 8) |
+			(i >> 16);
 
-		key_bytes[7] = input[i + 0];
-		key_bytes[6] = input[i + 1];
-		key_bytes[5] = input[i + 2];
-		key_bytes[4] = input[i + 3];
-		key_bytes[3] = input[i + 4];
-		key_bytes[2] = input[i + 5];
-
-		keys_in[i] = key[1];
-		values_in[i] = (key[0] & ((uint32_t)(-1) << 20)) | i;
+		values_in[i] = i & 0xFFFF;
 	}
 }
 
-__device__ __forceinline__ void fix_order(uint32_t a, uint32_t b, uint32_t* keys_in, uint32_t* values_in)
+template<uint32_t begin_bit>
+__device__ __forceinline__ void fix_order(const uint8_t* input, uint32_t a, uint32_t b, uint32_t* keys_in, uint16_t* values_in)
 {
-	union {
-		uint32_t value_a_32[2];
-		uint64_t value_a_64;
-	};
+	constexpr uint32_t offset = (32 - begin_bit) / 8;
 
-	union {
-		uint32_t value_b_32[2];
-		uint64_t value_b_64;
-	};
+	const uint32_t key_in_a = keys_in[a];
+	const uint32_t key_in_b = keys_in[b];
 
-	value_a_32[0] = values_in[a];
-	value_a_32[1] = keys_in[a];
+	const uint32_t value_in_a = values_in[a];
+	const uint32_t value_in_b = values_in[b];
 
-	value_b_32[0] = values_in[b];
-	value_b_32[1] = keys_in[b];
+	const uint32_t index_a = (((key_in_a & 0xFF) << 16) | value_in_a) + offset;
+	const uint32_t index_b = (((key_in_b & 0xFF) << 16) | value_in_b) + offset;
 
-	if (value_a_64 > value_b_64)
+	const uint32_t value_a =
+		(static_cast<uint32_t>(input[index_a + 0]) << 24) |
+		(static_cast<uint32_t>(input[index_a + 1]) << 16) |
+		(static_cast<uint32_t>(input[index_a + 2]) << 8) |
+		static_cast<uint32_t>(input[index_a + 3]);
+
+	const uint32_t value_b =
+		(static_cast<uint32_t>(input[index_b + 0]) << 24) |
+		(static_cast<uint32_t>(input[index_b + 1]) << 16) |
+		(static_cast<uint32_t>(input[index_b + 2]) << 8) |
+		static_cast<uint32_t>(input[index_b + 3]);
+
+	if (value_a > value_b)
 	{
-		values_in[a] = value_b_32[0];
-		keys_in[a] = value_b_32[1];
+		keys_in[a] = key_in_b;
+		keys_in[b] = key_in_a;
 
-		values_in[b] = value_a_32[0];
-		keys_in[b] = value_a_32[1];
+		values_in[a] = value_in_b;
+		values_in[b] = value_in_a;
 	}
 }
 
 template<uint32_t begin_bit>
 __global__ __launch_bounds__(1024)
-void BWT_fix_order(const uint32_t* data_sizes, uint32_t data_stride, uint32_t* keys_in, uint32_t* values_in)
+void BWT_fix_order(const uint8_t* datas, const uint32_t* data_sizes, uint32_t data_stride, uint32_t* keys_in, uint16_t* values_in)
 {
 	const uint32_t tid = threadIdx.x;
 	const uint32_t gid = blockIdx.x;
 	const uint32_t group_size = blockDim.x;
 
 	const uint32_t data_offset = gid * data_stride;
+	const uint8_t* input = datas + data_offset + 128;
 
 	const uint32_t N = data_sizes[gid] + 1;
 
@@ -123,14 +125,14 @@ void BWT_fix_order(const uint32_t* data_sizes, uint32_t data_stride, uint32_t* k
 
 			for (uint32_t j = i; j < n; ++j)
 				for (uint32_t k = j + 1; k < n; ++k)
-					fix_order(j, k, keys_in, values_in);
+					fix_order<begin_bit>(input, j, k, keys_in, values_in);
 		}
 	}
 }
 
 template<uint32_t DATA_STRIDE>
 __global__ __launch_bounds__(1024)
-void BWT_apply(const uint8_t* datas, const uint32_t* data_sizes, uint32_t* values_in, uint64_t* tmp_indices)
+void BWT_apply(const uint8_t* datas, const uint32_t* data_sizes, uint32_t* keys_in, uint16_t* values_in, uint64_t* tmp_indices)
 {
 	const uint32_t global_index = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -145,12 +147,13 @@ void BWT_apply(const uint8_t* datas, const uint32_t* data_sizes, uint32_t* value
 
 	const uint8_t* input = datas + data_offset + 128 - 1;
 
+	keys_in += data_offset;
 	values_in += data_offset;
 	tmp_indices += data_offset;
 
 	uint8_t* output = (uint8_t*)(tmp_indices);
 
-	output[i] = input[values_in[i] & ((1 << 20) - 1)];
+	output[i] = input[((keys_in[i] & 0xFF) << 16) | values_in[i]];
 }
 
 __global__ void __launch_bounds__(32) filter(uint32_t nonce, uint32_t bwt_max_size, const uint32_t* hashes, uint32_t* filtered_hashes)
