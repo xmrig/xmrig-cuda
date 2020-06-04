@@ -455,8 +455,7 @@ int32_t deviceInt(nvid_ctx *ctx, DeviceProperty property)
         return ctx->rx_dataset_host;
 
     case DeviceAstroBWTProcessedHashes:
-        // ~0.5% of all hashes are invalid
-        return static_cast<int32_t>(ctx->astrobwt_processed_hashes * 0.995);
+        return static_cast<int32_t>(ctx->astrobwt_processed_hashes);
 
     default:
         break;
