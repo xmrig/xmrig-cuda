@@ -1,3 +1,10 @@
+# v6.1.0
+- [#48](https://github.com/xmrig/xmrig-cuda/pull/48) Optimized AstroBWT, approximately 3 times faster.
+- [#51](https://github.com/xmrig/xmrig-cuda/pull/51) Reduced memory usage for KawPow.
+
+# v6.0.0
+- [#1694](https://github.com/xmrig/xmrig/pull/1694) Added support for KawPow algorithm (Ravencoin) on AMD/NVIDIA.
+
 # v3.0.0
 - **ABI changed, minimum supported XMRig version now is 5.11.0.**
 - [#41](https://github.com/xmrig/xmrig-cuda/pull/41) Added AstroBWT algorithm support.

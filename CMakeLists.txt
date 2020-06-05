@@ -6,9 +6,8 @@ option(WITH_RANDOMX "Enable RandomX algorithms family" ON)
 
 
 include_directories(src)
-add_definitions(/DXMRIG_ALGO_CN_LITE)
-add_definitions(/DXMRIG_ALGO_CN_HEAVY)
-add_definitions(/DXMRIG_ALGO_CN_PICO)
+add_definitions(/DXMRIG_ALGO_CN_LITE /DXMRIG_ALGO_CN_HEAVY /DXMRIG_ALGO_CN_PICO)
+add_definitions(/DCUB_IGNORE_DEPRECATED_CPP_DIALECT)
 
 
 include(cmake/cpu.cmake)

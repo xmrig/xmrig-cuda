@@ -71,21 +71,23 @@ static void calculate_fast_mod_data(uint32_t divisor, uint32_t& reciprocal, uint
 }
 
 
-void kawpow_prepare(nvid_ctx *ctx, const void* cache, size_t cache_size, size_t dag_size, uint32_t height, const uint64_t* dag_sizes)
+void kawpow_prepare(nvid_ctx *ctx, const void* cache, size_t cache_size, const void* dag_precalc, size_t dag_size, uint32_t height, const uint64_t* dag_sizes)
 {
-    constexpr size_t MEM_ALIGN = 4 * 1024 * 1024;
+    constexpr size_t MEM_ALIGN = 1024 * 1024;
 
     if (cache_size != ctx->kawpow_cache_size) {
         ctx->kawpow_cache_size = cache_size;
 
-        if (cache_size > ctx->kawpow_cache_capacity) {
-            CUDA_CHECK(ctx->device_id, cudaFree(ctx->kawpow_cache));
+        if (!dag_precalc) {
+            if (cache_size > ctx->kawpow_cache_capacity) {
+                CUDA_CHECK(ctx->device_id, cudaFree(ctx->kawpow_cache));
 
-            ctx->kawpow_cache_capacity = ((cache_size + MEM_ALIGN - 1) / MEM_ALIGN) * MEM_ALIGN;
-            CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->kawpow_cache, ctx->kawpow_cache_capacity));
+                ctx->kawpow_cache_capacity = ((cache_size + MEM_ALIGN - 1) / MEM_ALIGN) * MEM_ALIGN;
+                CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->kawpow_cache, ctx->kawpow_cache_capacity));
+            }
+
+            CUDA_CHECK(ctx->device_id, cudaMemcpy((uint8_t*)(ctx->kawpow_cache), cache, cache_size, cudaMemcpyHostToDevice));
         }
-
-        CUDA_CHECK(ctx->device_id, cudaMemcpy((uint8_t*)(ctx->kawpow_cache), cache, cache_size, cudaMemcpyHostToDevice));
     }
 
     if (dag_size != ctx->kawpow_dag_size) {
@@ -98,24 +100,33 @@ void kawpow_prepare(nvid_ctx *ctx, const void* cache, size_t cache_size, size_t 
             CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->kawpow_dag, ctx->kawpow_dag_capacity));
         }
 
+        if (dag_precalc) {
+            CUDA_CHECK(ctx->device_id, cudaMemcpy((uint8_t*)(ctx->kawpow_dag), cache, cache_size, cudaMemcpyHostToDevice));
+        }
+
         constexpr int blocks = 8192;
         constexpr int threads = 32;
 
+        const size_t cache_items = ((cache_size + 255) / 256) * 256 / sizeof(hash64_t);
         const size_t dag_items = dag_size / sizeof(hash64_t);
 
         uint4 light_words;
         light_words.w = ctx->kawpow_cache_size / sizeof(hash64_t);
         calculate_fast_mod_data(light_words.w, light_words.x, light_words.y, light_words.z);
 
-        for (size_t i = 0; i < dag_items; i += blocks * threads) {
+        for (size_t i = dag_precalc ? cache_items : 0; i < dag_items; i += blocks * threads) {
             CUDA_CHECK_KERNEL(ctx->device_id, ethash_calculate_dag_item<<<blocks, threads>>>(
                 i,
                 (hash64_t*) ctx->kawpow_dag,
                 ctx->kawpow_dag_size,
-                (hash64_t*) ctx->kawpow_cache,
+                (hash64_t*)(dag_precalc ? ctx->kawpow_dag : ctx->kawpow_cache),
                 light_words
             ));
             CUDA_CHECK(ctx->device_id, cudaDeviceSynchronize());
+        }
+
+        if (dag_precalc) {
+            CUDA_CHECK(ctx->device_id, cudaMemcpy((uint8_t*)(ctx->kawpow_dag), dag_precalc, cache_items * sizeof(hash64_t), cudaMemcpyHostToDevice));
         }
     }
 

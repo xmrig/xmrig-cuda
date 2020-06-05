@@ -29,133 +29,131 @@ namespace AstroBWT_Dero {
 
 constexpr int STAGE1_SIZE = 147253;
 
-constexpr int COUNTING_SORT_BITS = 8;
-constexpr int COUNTING_SORT_SIZE = (1 << COUNTING_SORT_BITS);
-constexpr int FINAL_SORT_BATCH_SIZE = COUNTING_SORT_SIZE;
-constexpr int FINAL_SORT_OVERLAP_SIZE = 32;
-
-template<uint32_t a, uint32_t b, uint32_t c, uint32_t d>
-struct SelectBytes
-{
-	static_assert((a < 8) && (b < 8) && (c < 8) && (d < 8), "Byte index must be between 0 and 7");
-	enum { value = a | (b << 4) | (c << 8) | (d << 12) };
-};
-
-__device__ uint64_t bswap64(uint64_t a)
-{
-	const uint32_t* data = (const uint32_t*) &a;
-	const uint32_t result[2] = { __byte_perm(data[1], data[1], SelectBytes<3, 2, 1, 0>::value), __byte_perm(data[0], data[0], SelectBytes<3, 2, 1, 0>::value) };
-	return *((const uint64_t*)result);
-}
-
-__global__ void __launch_bounds__(32, 16) BWT(uint8_t* datas, uint32_t* data_sizes, uint32_t data_stride, uint64_t* indices, uint64_t* tmp_indices)
+__global__ __launch_bounds__(1024)
+void BWT_preprocess(const uint8_t* datas, const uint32_t* data_sizes, uint32_t data_stride, uint32_t* keys_in, uint16_t* values_in, uint32_t* offsets_begin, uint32_t* offsets_end)
 {
 	const uint32_t tid = threadIdx.x;
 	const uint32_t gid = blockIdx.x;
+	const uint32_t group_size = blockDim.x;
 
-	__shared__ int counters[COUNTING_SORT_SIZE][2];
+	const uint32_t data_offset = gid * data_stride;
 
-	for (uint32_t i = tid; i < COUNTING_SORT_SIZE * 2; i += 32)
-		((int*)counters)[i] = 0;
-
-	const uint64_t data_offset = (uint64_t)(gid) * data_stride;
-
-	uint8_t* input = datas + data_offset + 128;
+	const uint8_t* input = datas + data_offset + 128;
 	const uint32_t N = data_sizes[gid] + 1;
 
-	uint64_t* p = (uint64_t*)(input);
-	uint8_t* counters_atomic = (uint8_t*)(counters);
+	keys_in += data_offset;
+	values_in += data_offset;
 
-	indices += data_offset;
+	offsets_begin[gid] = data_offset;
+	offsets_end[gid] = data_offset + N;
+
+	for (uint32_t i = tid; i < N; i += group_size)
+	{
+		keys_in[i] =
+			(static_cast<uint32_t>(input[i + 0]) << 24) |
+			(static_cast<uint32_t>(input[i + 1]) << 16) |
+			(static_cast<uint32_t>(input[i + 2]) << 8) |
+			(i >> 16);
+
+		values_in[i] = i & 0xFFFF;
+	}
+}
+
+template<uint32_t begin_bit>
+__device__ __forceinline__ void fix_order(const uint8_t* input, uint32_t a, uint32_t b, uint32_t* keys_in, uint16_t* values_in)
+{
+	constexpr uint32_t offset = (32 - begin_bit) / 8;
+
+	const uint32_t key_in_a = keys_in[a];
+	const uint32_t key_in_b = keys_in[b];
+
+	const uint32_t value_in_a = values_in[a];
+	const uint32_t value_in_b = values_in[b];
+
+	const uint32_t index_a = (((key_in_a & 0xFF) << 16) | value_in_a) + offset;
+	const uint32_t index_b = (((key_in_b & 0xFF) << 16) | value_in_b) + offset;
+
+	const uint32_t value_a =
+		(static_cast<uint32_t>(input[index_a + 0]) << 24) |
+		(static_cast<uint32_t>(input[index_a + 1]) << 16) |
+		(static_cast<uint32_t>(input[index_a + 2]) << 8) |
+		static_cast<uint32_t>(input[index_a + 3]);
+
+	const uint32_t value_b =
+		(static_cast<uint32_t>(input[index_b + 0]) << 24) |
+		(static_cast<uint32_t>(input[index_b + 1]) << 16) |
+		(static_cast<uint32_t>(input[index_b + 2]) << 8) |
+		static_cast<uint32_t>(input[index_b + 3]);
+
+	if (value_a > value_b)
+	{
+		keys_in[a] = key_in_b;
+		keys_in[b] = key_in_a;
+
+		values_in[a] = value_in_b;
+		values_in[b] = value_in_a;
+	}
+}
+
+template<uint32_t begin_bit>
+__global__ __launch_bounds__(1024)
+void BWT_fix_order(const uint8_t* datas, const uint32_t* data_sizes, uint32_t data_stride, uint32_t* keys_in, uint16_t* values_in)
+{
+	const uint32_t tid = threadIdx.x;
+	const uint32_t gid = blockIdx.x;
+	const uint32_t group_size = blockDim.x;
+
+	const uint32_t data_offset = gid * data_stride;
+	const uint8_t* input = datas + data_offset + 128;
+
+	const uint32_t N = data_sizes[gid] + 1;
+
+	keys_in += data_offset;
+	values_in += data_offset;
+
+	for (uint32_t i = tid, N1 = N - 1; i < N1; i += group_size)
+	{
+		const uint32_t value = keys_in[i] >> begin_bit;
+		if (value == (keys_in[i + 1] >> begin_bit))
+		{
+			if (i && (value == (keys_in[i - 1] >> begin_bit)))
+				continue;
+
+			uint32_t n = i + 2;
+			while ((n < N) && (value == (keys_in[n] >> begin_bit)))
+				++n;
+
+			for (uint32_t j = i; j < n; ++j)
+				for (uint32_t k = j + 1; k < n; ++k)
+					fix_order<begin_bit>(input, j, k, keys_in, values_in);
+		}
+	}
+}
+
+template<uint32_t DATA_STRIDE>
+__global__ __launch_bounds__(1024)
+void BWT_apply(const uint8_t* datas, const uint32_t* data_sizes, uint32_t* keys_in, uint16_t* values_in, uint64_t* tmp_indices)
+{
+	const uint32_t global_index = blockIdx.x * blockDim.x + threadIdx.x;
+
+	const uint32_t data_index = global_index / DATA_STRIDE;
+	const uint32_t data_offset = data_index * DATA_STRIDE;
+	const uint32_t i = global_index - data_offset;
+
+	const uint32_t N = data_sizes[data_index] + 1;
+
+	if (i >= N)
+		return;
+
+	const uint8_t* input = datas + data_offset + 128 - 1;
+
+	keys_in += data_offset;
+	values_in += data_offset;
 	tmp_indices += data_offset;
 
-	for (uint32_t i = tid; i < N; i += 32)
-	{
-		const uint32_t index = i >> 3;
-		const uint32_t bit_offset = (i & 7) << 3;
-
-		const uint64_t a = p[index];
-		const uint64_t b = p[index + 1];
-
-		const uint64_t value = bswap64((a >> bit_offset) | (b << (64 - bit_offset)));
-
-		indices[i] = (value & ((uint64_t)(-1) << 21)) | i;
-		atomicAdd((int*)(counters_atomic + (((value >> (64 - COUNTING_SORT_BITS * 2)) & (COUNTING_SORT_SIZE - 1)) << 3)), 1);
-		atomicAdd((int*)(counters_atomic + ((value >> (64 - COUNTING_SORT_BITS)) << 3) + 4), 1);
-	}
-
-	if (tid == 0)
-	{
-		int t0 = counters[0][0];
-		int t1 = counters[0][1];
-		counters[0][0] = t0 - 1;
-		counters[0][1] = t1 - 1;
-		for (uint32_t i = 1; i < COUNTING_SORT_SIZE; ++i)
-		{
-			t0 += counters[i][0];
-			t1 += counters[i][1];
-			counters[i][0] = t0 - 1;
-			counters[i][1] = t1 - 1;
-		}
-	}
-
-	for (int i = tid; i < N; i += 32)
-	{
-		const uint64_t data = indices[i];
-		const int k = atomicSub((int*)(counters_atomic + (((data >> (64 - COUNTING_SORT_BITS * 2)) & (COUNTING_SORT_SIZE - 1)) << 3)), 1);
-		tmp_indices[k] = data;
-	}
-	sync();
-
-	for (int i = N - 1 - tid; i >= 0; i -= 32)
-	{
-		const uint64_t data = tmp_indices[i];
-		const int k = atomicSub((int*)(counters_atomic + ((data >> (64 - COUNTING_SORT_BITS)) << 3) + 4), 1);
-		indices[k] = data;
-	}
-	sync();
-
-	uint64_t* buf = (uint64_t*)(counters);
-	for (uint32_t i = 0; i < N; i += FINAL_SORT_BATCH_SIZE - FINAL_SORT_OVERLAP_SIZE)
-	{
-		const uint32_t len = (N - i < FINAL_SORT_BATCH_SIZE) ? (N - i) : FINAL_SORT_BATCH_SIZE;
-
-		for (uint32_t j = tid; j < len; j += 32)
-			buf[j] = indices[i + j];
-
-		if (tid == 0)
-		{
-			uint64_t prev_t = buf[0];
-			for (int i = 1; i < len; ++i)
-			{
-				uint64_t t = buf[i];
-				if (t < prev_t)
-				{
-					const uint64_t t2 = prev_t;
-					int j = i - 1;
-					do
-					{
-						buf[j + 1] = prev_t;
-						--j;
-						if (j < 0)
-							break;
-						prev_t = buf[j];
-					} while (t < prev_t);
-					buf[j + 1] = t;
-					t = t2;
-				}
-				prev_t = t;
-			}
-		}
-
-		for (uint32_t j = tid; j < len; j += 32)
-			indices[i + j] = buf[j];
-	}
-
-	--input;
 	uint8_t* output = (uint8_t*)(tmp_indices);
-	for (int i = tid; i <= N; i += 32)
-		output[i] = input[indices[i] & ((1 << 21) - 1)];
+
+	output[i] = input[((keys_in[i] & 0xFF) << 16) | values_in[i]];
 }
 
 __global__ void __launch_bounds__(32) filter(uint32_t nonce, uint32_t bwt_max_size, const uint32_t* hashes, uint32_t* filtered_hashes)

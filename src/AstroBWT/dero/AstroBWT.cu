@@ -43,6 +43,7 @@ __device__ void sync()
 #include "sha3.h"
 #include "salsa20.h"
 #include "BWT.h"
+#include "3rdparty/cub/device/device_segmented_radix_sort.cuh"
 
 
 static constexpr uint32_t BWT_DATA_MAX_SIZE = 560 * 1024 - 256;
@@ -68,14 +69,18 @@ void astrobwt_prepare(nvid_ctx *ctx, uint32_t batch_size)
         CUDA_CHECK(ctx->device_id, cudaFree(ctx->astrobwt_tmp_indices));
         CUDA_CHECK(ctx->device_id, cudaFree(ctx->astrobwt_filtered_hashes));
         CUDA_CHECK(ctx->device_id, cudaFree(ctx->astrobwt_shares));
+        CUDA_CHECK(ctx->device_id, cudaFree(ctx->astrobwt_offsets_begin));
+        CUDA_CHECK(ctx->device_id, cudaFree(ctx->astrobwt_offsets_end));
 
         CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->astrobwt_salsa20_keys, BATCH1_SIZE * 32));
         CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->astrobwt_bwt_data, BWT_ALLOCATION_SIZE));
         CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->astrobwt_bwt_data_sizes, BATCH1_SIZE * sizeof(uint32_t)));
         CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->astrobwt_indices, BWT_ALLOCATION_SIZE * sizeof(uint64_t)));
-        CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->astrobwt_tmp_indices, BWT_ALLOCATION_SIZE * sizeof(uint64_t)));
+        CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->astrobwt_tmp_indices, BWT_ALLOCATION_SIZE * sizeof(uint64_t) + 65536));
         CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->astrobwt_filtered_hashes, (BATCH1_SIZE + BATCH2_SIZE) * (sizeof(uint32_t) + 32) + sizeof(uint32_t)));
         CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->astrobwt_shares, 11 * sizeof(uint32_t)));
+        CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->astrobwt_offsets_begin, BATCH1_SIZE * sizeof(uint32_t)));
+        CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->astrobwt_offsets_end, BATCH1_SIZE * sizeof(uint32_t)));
     }
 
     const uint32_t zero = 0;
@@ -84,10 +89,60 @@ void astrobwt_prepare(nvid_ctx *ctx, uint32_t batch_size)
 
 namespace AstroBWT_Dero {
 
+template<uint32_t DATA_STRIDE>
+static void BWT(nvid_ctx *ctx, uint32_t global_work_size, uint32_t BWT_ALLOCATION_SIZE)
+{
+    uint32_t* keys_in = (uint32_t*)ctx->astrobwt_indices;
+    uint16_t* values_in = (uint16_t*)(keys_in + BWT_ALLOCATION_SIZE);
+
+    CUDA_CHECK_KERNEL(ctx->device_id, BWT_preprocess<<<global_work_size, 1024>>>(
+        (uint8_t*)ctx->astrobwt_bwt_data,
+        (uint32_t*)ctx->astrobwt_bwt_data_sizes,
+        DATA_STRIDE,
+        keys_in,
+        values_in,
+        (uint32_t*)ctx->astrobwt_offsets_begin,
+        (uint32_t*)ctx->astrobwt_offsets_end
+    ));
+
+    size_t temp_storage_bytes = BWT_ALLOCATION_SIZE * sizeof(uint64_t) + 65536;
+    cub::DeviceSegmentedRadixSort::SortPairs(
+        ctx->astrobwt_tmp_indices,
+        temp_storage_bytes,
+        keys_in,
+        keys_in,
+        values_in,
+        values_in,
+        global_work_size * DATA_STRIDE,
+        global_work_size,
+        (uint32_t*)ctx->astrobwt_offsets_begin,
+        (uint32_t*)ctx->astrobwt_offsets_end,
+        8,
+        32
+    );
+
+    CUDA_CHECK_KERNEL(ctx->device_id, BWT_fix_order<8><<<global_work_size, 1024>>>(
+        (uint8_t*)ctx->astrobwt_bwt_data,
+        (uint32_t*)ctx->astrobwt_bwt_data_sizes,
+        DATA_STRIDE,
+        keys_in,
+        values_in
+    ));
+
+    CUDA_CHECK_KERNEL(ctx->device_id, BWT_apply<DATA_STRIDE><<<(global_work_size * DATA_STRIDE) / 1024, 1024>>>(
+        (uint8_t*)ctx->astrobwt_bwt_data,
+        (uint32_t*)ctx->astrobwt_bwt_data_sizes,
+        keys_in,
+        values_in,
+        (uint64_t*)ctx->astrobwt_tmp_indices
+    ));
+}
+
 void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce)
 {
     const uint32_t BATCH1_SIZE = ctx->astrobwt_batch1_size;
     const uint32_t BATCH2_SIZE = ctx->astrobwt_intensity;
+    const uint32_t BWT_ALLOCATION_SIZE = BATCH2_SIZE * BWT_DATA_STRIDE;
 
     const uint32_t zero = 0;
     CUDA_CHECK(ctx->device_id, cudaMemcpy((uint8_t*)(ctx->astrobwt_shares), &zero, sizeof(zero), cudaMemcpyHostToDevice));
@@ -100,7 +155,7 @@ void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t target, uint32_t *rescount, ui
     CUDA_CHECK(ctx->device_id, cudaMemcpy((uint8_t*)(ctx->astrobwt_bwt_data_sizes), bwt_data_sizes.data(), bwt_data_sizes.size() * sizeof(uint32_t), cudaMemcpyHostToDevice));
 
     CUDA_CHECK_KERNEL(ctx->device_id, Salsa20_XORKeyStream<<<global_work_size, 32>>>((uint32_t*)ctx->astrobwt_salsa20_keys, (uint32_t*)ctx->astrobwt_bwt_data, (uint32_t*)ctx->astrobwt_bwt_data_sizes, STAGE1_DATA_STRIDE));
-    CUDA_CHECK_KERNEL(ctx->device_id, BWT<<<global_work_size, 32>>>((uint8_t*)ctx->astrobwt_bwt_data, (uint32_t*)ctx->astrobwt_bwt_data_sizes, STAGE1_DATA_STRIDE, (uint64_t*)ctx->astrobwt_indices, (uint64_t*)ctx->astrobwt_tmp_indices));
+    BWT<STAGE1_DATA_STRIDE>(ctx, global_work_size, BWT_ALLOCATION_SIZE);
     CUDA_CHECK_KERNEL(ctx->device_id, sha3<<<global_work_size, 32>>>((uint8_t*)ctx->astrobwt_tmp_indices, (uint32_t*)ctx->astrobwt_bwt_data_sizes, STAGE1_DATA_STRIDE * 8, (uint64_t*)ctx->astrobwt_salsa20_keys));
     CUDA_CHECK_KERNEL(ctx->device_id, filter<<<global_work_size / 32, 32>>>(nonce, BWT_DATA_MAX_SIZE, (uint32_t*)ctx->astrobwt_salsa20_keys, (uint32_t*)ctx->astrobwt_filtered_hashes));
 
@@ -117,7 +172,7 @@ void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t target, uint32_t *rescount, ui
 
         CUDA_CHECK_KERNEL(ctx->device_id, prepare_batch2<<<global_work_size / 32, 32>>>((uint32_t*)ctx->astrobwt_salsa20_keys, (uint32_t*)ctx->astrobwt_filtered_hashes, (uint32_t*)ctx->astrobwt_bwt_data_sizes));
         CUDA_CHECK_KERNEL(ctx->device_id, Salsa20_XORKeyStream<<<global_work_size, 32>>>((uint32_t*)ctx->astrobwt_salsa20_keys, (uint32_t*)ctx->astrobwt_bwt_data, (uint32_t*)ctx->astrobwt_bwt_data_sizes, BWT_DATA_STRIDE));
-        CUDA_CHECK_KERNEL(ctx->device_id, BWT<<<global_work_size, 32>>>((uint8_t*)ctx->astrobwt_bwt_data, (uint32_t*)ctx->astrobwt_bwt_data_sizes, BWT_DATA_STRIDE, (uint64_t*)ctx->astrobwt_indices, (uint64_t*)ctx->astrobwt_tmp_indices));
+        BWT<BWT_DATA_STRIDE>(ctx, global_work_size, BWT_ALLOCATION_SIZE);
         CUDA_CHECK_KERNEL(ctx->device_id, sha3<<<global_work_size, 32>>>((uint8_t*)ctx->astrobwt_tmp_indices, (uint32_t*)ctx->astrobwt_bwt_data_sizes, BWT_DATA_STRIDE * 8, (uint64_t*)ctx->astrobwt_salsa20_keys));
         CUDA_CHECK_KERNEL(ctx->device_id, find_shares<<<global_work_size / 32, 32>>>((uint64_t*)ctx->astrobwt_salsa20_keys, (uint32_t*)ctx->astrobwt_filtered_hashes, target, (uint32_t*)ctx->astrobwt_shares));
     }

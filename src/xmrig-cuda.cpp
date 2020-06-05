@@ -294,7 +294,24 @@ bool kawPowPrepare(nvid_ctx *ctx, const void* cache, size_t cache_size, size_t d
     resetError(ctx->device_id);
 
     try {
-        kawpow_prepare(ctx, cache, cache_size, dag_size, height, dag_sizes);
+        kawpow_prepare(ctx, cache, cache_size, nullptr, dag_size, height, dag_sizes);
+    }
+    catch (std::exception &ex) {
+        saveError(ctx->device_id, ex);
+
+        return false;
+    }
+
+    return true;
+}
+
+
+bool kawPowPrepare_v2(nvid_ctx *ctx, const void* cache, size_t cache_size, const void* dag_precalc, size_t dag_size, uint32_t height, const uint64_t* dag_sizes)
+{
+    resetError(ctx->device_id);
+
+    try {
+        kawpow_prepare(ctx, cache, cache_size, dag_precalc, dag_size, height, dag_sizes);
     }
     catch (std::exception &ex) {
         saveError(ctx->device_id, ex);
@@ -455,8 +472,7 @@ int32_t deviceInt(nvid_ctx *ctx, DeviceProperty property)
         return ctx->rx_dataset_host;
 
     case DeviceAstroBWTProcessedHashes:
-        // ~0.5% of all hashes are invalid
-        return static_cast<int32_t>(ctx->astrobwt_processed_hashes * 0.995);
+        return static_cast<int32_t>(ctx->astrobwt_processed_hashes);
 
     default:
         break;
@@ -575,6 +591,8 @@ void release(nvid_ctx *ctx)
     cudaFree(ctx->astrobwt_tmp_indices);
     cudaFree(ctx->astrobwt_filtered_hashes);
     cudaFree(ctx->astrobwt_shares);
+    cudaFree(ctx->astrobwt_offsets_begin);
+    cudaFree(ctx->astrobwt_offsets_end);
 
     cudaFree(ctx->kawpow_cache);
     cudaFree(ctx->kawpow_dag);
