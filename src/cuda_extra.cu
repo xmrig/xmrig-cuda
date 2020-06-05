@@ -324,7 +324,9 @@ int cryptonight_extra_cpu_init(nvid_ctx *ctx, const xmrig::Algorithm &algorithm,
     CUDA_CHECK(ctx->device_id, cudaDeviceSetCacheConfig(cudaFuncCachePreferShared));
 
     size_t wsize = ctx->device_blocks * ctx->device_threads;
-    CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_ctx_state, 50 * sizeof(uint32_t) * wsize));
+    if (algorithm.family() != Algorithm::KAWPOW) {
+        CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_ctx_state, 50 * sizeof(uint32_t) * wsize));
+    }
     size_t ctx_b_size = 4 * sizeof(uint32_t) * wsize;
 
     if (algorithm.family() == Algorithm::CN_HEAVY) {
@@ -340,7 +342,9 @@ int cryptonight_extra_cpu_init(nvid_ctx *ctx, const xmrig::Algorithm &algorithm,
 
     // POW block format http://monero.wikia.com/wiki/PoW_Block_Header_Format
     CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_input,        200));
-    CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_result_count, sizeof (uint32_t)));
+    if (algorithm.family() != Algorithm::KAWPOW) {
+        CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_result_count, sizeof(uint32_t)));
+    }
     CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_result_nonce, 16 * sizeof (uint32_t)));
 
     // Allocate buffers for Cryptonight
