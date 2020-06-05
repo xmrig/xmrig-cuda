@@ -294,7 +294,24 @@ bool kawPowPrepare(nvid_ctx *ctx, const void* cache, size_t cache_size, size_t d
     resetError(ctx->device_id);
 
     try {
-        kawpow_prepare(ctx, cache, cache_size, dag_size, height, dag_sizes);
+        kawpow_prepare(ctx, cache, cache_size, nullptr, dag_size, height, dag_sizes);
+    }
+    catch (std::exception &ex) {
+        saveError(ctx->device_id, ex);
+
+        return false;
+    }
+
+    return true;
+}
+
+
+bool kawPowPrepare_v2(nvid_ctx *ctx, const void* cache, size_t cache_size, const void* dag_precalc, size_t dag_size, uint32_t height, const uint64_t* dag_sizes)
+{
+    resetError(ctx->device_id);
+
+    try {
+        kawpow_prepare(ctx, cache, cache_size, dag_precalc, dag_size, height, dag_sizes);
     }
     catch (std::exception &ex) {
         saveError(ctx->device_id, ex);
