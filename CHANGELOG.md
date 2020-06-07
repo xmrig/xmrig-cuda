@@ -1,3 +1,6 @@
+# v6.2.0
+- [#52](https://github.com/xmrig/xmrig-cuda/pull/52) Added new algorithm `cn/ccx` for Conceal.
+
 # v6.1.0
 - [#48](https://github.com/xmrig/xmrig-cuda/pull/48) Optimized AstroBWT, approximately 3 times faster.
 - [#51](https://github.com/xmrig/xmrig-cuda/pull/51) Reduced memory usage for KawPow.
