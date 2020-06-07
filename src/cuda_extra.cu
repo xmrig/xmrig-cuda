@@ -335,7 +335,9 @@ int cryptonight_extra_cpu_init(nvid_ctx *ctx, const xmrig::Algorithm &algorithm,
         // create a double buffer for the state to exchange the mixed state to phase1
         CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_ctx_state2, 50 * sizeof(uint32_t) * wsize));
     }
-    else {
+    else if (algorithm.id() == Algorithm::CN_CCX) {
+        ctx_b_size += sizeof(uint32_t) * 4 * wsize;
+    } else {
         ctx_b_size *= 4;
         ctx->d_ctx_state2 = ctx->d_ctx_state;
     }

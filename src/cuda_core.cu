@@ -511,6 +511,11 @@ __global__ void cryptonight_core_gpu_phase2_quad(
 
     d[1] = (d_ctx_b + thread * 4)[sub];
 
+    float conc_var;
+    if (ALGO == Algorithm::CN_CCX) {
+        conc_var = (partidx != 0) ? int_as_float(*(d_ctx_b + threads * 4 + thread * 4 + sub)) : 0.0f;
+    }
+
     #pragma unroll 2
     for (i = start; i < end; ++i) {
         #pragma unroll 2
@@ -543,7 +548,15 @@ __global__ void cryptonight_core_gpu_phase2_quad(
                     }
                 }
             } else {
-                const uint32_t x_0 = loadGlobal32<uint32_t>(long_state + j);
+                uint32_t x_0 = loadGlobal32<uint32_t>(long_state + j);
+
+                if (ALGO == Algorithm::CN_CCX) {
+                    float r = int2float((int32_t)x_0) + conc_var;
+                    r = int_as_float((float_as_int(r * r * r) & 0x807FFFFF) | 0x40000000);
+                    x_0 ^= (int32_t)(int_as_float((float_as_int(conc_var) & 0x807FFFFF) | 0x40000000) * 536870880.0f);
+                    conc_var += r;
+                }
+
                 const uint32_t x_1 = shuffle<4>(sPtr,sub, x_0, sub + 1);
                 const uint32_t x_2 = shuffle<4>(sPtr,sub, x_0, sub + 2);
                 const uint32_t x_3 = shuffle<4>(sPtr,sub, x_0, sub + 3);
@@ -629,6 +642,9 @@ __global__ void cryptonight_core_gpu_phase2_quad(
             if (sub&1) {
                 *(d_ctx_b + threads * 4 + thread) = idx0;
             }
+        }
+        if (ALGO == Algorithm::CN_CCX) {
+            *(d_ctx_b + threads * 4 + thread * 4 + sub) = float_as_int(conc_var);
         }
     }
 }
@@ -872,6 +888,10 @@ void cryptonight_gpu_hash(nvid_ctx *ctx, const xmrig::Algorithm &algorithm, uint
 
         case Algorithm::CN_DOUBLE:
             cryptonight_core_gpu_hash<Algorithm::CN_DOUBLE>(ctx, startNonce);
+            break;
+
+        case Algorithm::CN_CCX:
+            cryptonight_core_gpu_hash<Algorithm::CN_CCX>(ctx, startNonce);
             break;
 
         default:

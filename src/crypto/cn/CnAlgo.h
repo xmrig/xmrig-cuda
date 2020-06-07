@@ -94,6 +94,7 @@ public:
         case Algorithm::CN_HEAVY_TUBE:
         case Algorithm::CN_HEAVY_XHV:
 #       endif
+        case Algorithm::CN_CCX:
             return CN_ITER / 2;
 
         case Algorithm::CN_RWZ:
@@ -140,6 +141,7 @@ public:
         case Algorithm::CN_HEAVY_0:
         case Algorithm::CN_HEAVY_XHV:
 #       endif
+        case Algorithm::CN_CCX:
             return Algorithm::CN_0;
 
         case Algorithm::CN_1:
@@ -183,6 +185,7 @@ template<> constexpr inline Algorithm::Id CnAlgo<Algorithm::CN_XAO>::base() cons
 template<> constexpr inline Algorithm::Id CnAlgo<Algorithm::CN_LITE_0>::base() const        { return Algorithm::CN_0; }
 template<> constexpr inline Algorithm::Id CnAlgo<Algorithm::CN_HEAVY_0>::base() const       { return Algorithm::CN_0; }
 template<> constexpr inline Algorithm::Id CnAlgo<Algorithm::CN_HEAVY_XHV>::base() const     { return Algorithm::CN_0; }
+template<> constexpr inline Algorithm::Id CnAlgo<Algorithm::CN_CCX>::base() const           { return Algorithm::CN_0; }
 template<> constexpr inline Algorithm::Id CnAlgo<Algorithm::CN_1>::base() const             { return Algorithm::CN_1; }
 template<> constexpr inline Algorithm::Id CnAlgo<Algorithm::CN_FAST>::base() const          { return Algorithm::CN_1; }
 template<> constexpr inline Algorithm::Id CnAlgo<Algorithm::CN_RTO>::base() const           { return Algorithm::CN_1; }
@@ -197,6 +200,7 @@ template<> constexpr inline uint32_t CnAlgo<Algorithm::CN_LITE_1>::iterations() 
 template<> constexpr inline uint32_t CnAlgo<Algorithm::CN_HEAVY_0>::iterations() const      { return CN_ITER / 2; }
 template<> constexpr inline uint32_t CnAlgo<Algorithm::CN_HEAVY_TUBE>::iterations() const   { return CN_ITER / 2; }
 template<> constexpr inline uint32_t CnAlgo<Algorithm::CN_HEAVY_XHV>::iterations() const    { return CN_ITER / 2; }
+template<> constexpr inline uint32_t CnAlgo<Algorithm::CN_CCX>::iterations() const          { return CN_ITER / 2; }
 template<> constexpr inline uint32_t CnAlgo<Algorithm::CN_XAO>::iterations() const          { return CN_ITER * 2; }
 template<> constexpr inline uint32_t CnAlgo<Algorithm::CN_DOUBLE>::iterations() const       { return CN_ITER * 2; }
 template<> constexpr inline uint32_t CnAlgo<Algorithm::CN_RWZ>::iterations() const          { return 0x60000; }
