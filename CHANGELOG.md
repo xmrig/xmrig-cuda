@@ -1,5 +1,6 @@
 # v6.2.0
 - [#52](https://github.com/xmrig/xmrig-cuda/pull/52) Added new algorithm `cn/ccx` for Conceal.
+- [#53](https://github.com/xmrig/xmrig-cuda/pull/53) Fixed build with CUDA 11.
 
 # v6.1.0
 - [#48](https://github.com/xmrig/xmrig-cuda/pull/48) Optimized AstroBWT, approximately 3 times faster.
