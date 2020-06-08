@@ -264,12 +264,6 @@ struct u64 : public uint2
     {
         return ((uint64_t*)&this->x)[0] += other;
     }
-
-    __forceinline__ __device__ void print(int i) const
-    {
-        if(i<2)
-            printf("gpu: %lu\n", ((uint64_t*)&this->x)[0]);
-    }
 };
 
 /** cryptonight with two threads per hash
