@@ -57,6 +57,7 @@ public:
         CN_HEAVY_XHV,  // "cn-heavy/xhv"     CryptoNight-Heavy (modified, Haven Protocol only).
         CN_PICO_0,     // "cn-pico"          CryptoNight-Pico
         CN_PICO_TLO,   // "cn-pico/tlo"      CryptoNight-Pico (TLO)
+        CN_CCX,        // "cn/ccx"           Conceal (CCX)
         RX_0,          // "rx/0"             RandomX (reference configuration).
         RX_WOW,        // "rx/wow"           RandomWOW (Wownero).
         RX_LOKI,       // "rx/loki"          RandomXL (Loki).
@@ -213,6 +214,7 @@ public:
         case CN_RWZ:
         case CN_ZLS:
         case CN_DOUBLE:
+        case CN_CCX:
             return CN;
 
         case CN_LITE_0:
