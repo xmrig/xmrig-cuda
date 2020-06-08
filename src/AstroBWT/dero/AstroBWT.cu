@@ -43,7 +43,13 @@ __device__ void sync()
 #include "sha3.h"
 #include "salsa20.h"
 #include "BWT.h"
+
+
+#if (__CUDACC_VER_MAJOR__ >= 11)
+#include <cub/device/device_segmented_radix_sort.cuh>
+#else
 #include "3rdparty/cub/device/device_segmented_radix_sort.cuh"
+#endif
 
 
 static constexpr uint32_t BWT_DATA_MAX_SIZE = 560 * 1024 - 256;
