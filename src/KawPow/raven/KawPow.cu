@@ -33,44 +33,6 @@
 #include "CudaKawPow_gen.h"
 
 
-static inline uint32_t clz(uint32_t a)
-{
-#ifdef _MSC_VER
-    unsigned long index;
-    _BitScanReverse(&index, a);
-    return 31 - index;
-#else
-    return __builtin_clz(a);
-#endif
-}
-
-
-static void calculate_fast_mod_data(uint32_t divisor, uint32_t& reciprocal, uint32_t& increment, uint32_t& shift)
-{
-    if ((divisor & (divisor - 1)) == 0) {
-        reciprocal = 1;
-        increment = 0;
-        shift = 31U - clz(divisor);
-    }
-    else {
-        shift = 63U - clz(divisor);
-        const uint64_t N = 1ULL << shift;
-        const uint64_t q = N / divisor;
-        const uint64_t r = N - q * divisor;
-        if (r * 2 < divisor)
-        {
-            reciprocal = static_cast<uint32_t>(q);
-            increment = 1;
-        }
-        else
-        {
-            reciprocal = static_cast<uint32_t>(q + 1);
-            increment = 0;
-        }
-    }
-}
-
-
 void kawpow_prepare(nvid_ctx *ctx, const void* cache, size_t cache_size, const void* dag_precalc, size_t dag_size, uint32_t height, const uint64_t* dag_sizes)
 {
     constexpr size_t MEM_ALIGN = 1024 * 1024;
@@ -140,14 +102,14 @@ void kawpow_prepare(nvid_ctx *ctx, const void* cache, size_t cache_size, const v
 
         std::vector<char> ptx;
         std::string lowered_name;
-        KawPow_get_program(ptx, lowered_name, period, ctx->device_arch[0], ctx->device_arch[1], dag_sizes);
+        KawPow_get_program(ptx, lowered_name, period, ctx->device_threads, ctx->device_arch[0], ctx->device_arch[1], dag_sizes);
 
         CU_CHECK(ctx->device_id, cuModuleLoadDataEx(&ctx->kawpow_module, ptx.data(), 0, 0, 0));
         CU_CHECK(ctx->device_id, cuModuleGetFunction(&ctx->kawpow_kernel, ctx->kawpow_module, lowered_name.c_str()));
 
         ctx->kawpow_period = period;
 
-        KawPow_get_program(ptx, lowered_name, period + 1, ctx->device_arch[0], ctx->device_arch[1], dag_sizes, true);
+        KawPow_get_program(ptx, lowered_name, period + 1, ctx->device_threads, ctx->device_arch[0], ctx->device_arch[1], dag_sizes, true);
     }
 
     if (!ctx->kawpow_stop) {
