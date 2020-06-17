@@ -40,7 +40,7 @@ DEV_INLINE void progPowLoop(const uint32_t loop, uint32_t mix[PROGPOW_REGS], con
 
     // global load
     offset = SHFL(mix[0], loop % PROGPOW_LANES, PROGPOW_LANES);
-    offset %= PROGPOW_DAG_ELEMENTS;
+    XMRIG_INCLUDE_OFFSET_MOD_DAG_ELEMENTS
     offset = offset * PROGPOW_LANES + (lane_id ^ loop) % PROGPOW_LANES;
     data_dag = g_dag[offset];
 
@@ -194,7 +194,7 @@ __device__ __forceinline__ void fill_mix(uint32_t* hash_seed, uint32_t lane_id, 
         mix[i] = kiss99(st);
 }
 
-__global__ void progpow_search(const dag_t *g_dag, const uint32_t* job_blob, const uint64_t target, bool hack_false, uint32_t* results, uint32_t* stop)
+__global__ void XMRIG_INCLUDE_LAUNCH_BOUNDS progpow_search(const dag_t *g_dag, const uint32_t* job_blob, const uint64_t target, bool hack_false, uint32_t* results, uint32_t* stop)
 {
     if (*stop) {
         if (threadIdx.x == 0) {
