@@ -112,15 +112,18 @@ void kawpow_prepare(nvid_ctx *ctx, const void* cache, size_t cache_size, const v
         KawPow_get_program(ptx, lowered_name, period + 1, ctx->device_threads, ctx->device_arch[0], ctx->device_arch[1], dag_sizes, true);
     }
 
-    if (!ctx->kawpow_stop) {
-        CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->kawpow_stop, sizeof(uint32_t) * 2));
+    if (!ctx->kawpow_stop_host) {
+        CUDA_CHECK(ctx->device_id, cudaMallocHost(&ctx->kawpow_stop_host, sizeof(uint32_t) * 2));
+        CUDA_CHECK(ctx->device_id, cudaHostGetDevicePointer(&ctx->kawpow_stop_device, ctx->kawpow_stop_host, 0));
     }
 }
 
 
 void kawpow_stop_hash(nvid_ctx *ctx)
 {
-    // TODO: this is called from the main thread which doesn't have a valid CUDA context, so nothing works here
+    if (ctx->kawpow_stop_host) {
+        *ctx->kawpow_stop_host = 1;
+    }
 }
 
 
@@ -132,11 +135,11 @@ void hash(nvid_ctx *ctx, uint8_t* job_blob, uint64_t target, uint32_t *rescount,
     dim3 block(ctx->device_threads);
 
     uint32_t hack_false = 0;
-    void* args[] = { &ctx->kawpow_dag, &ctx->d_input, &target, &hack_false, &ctx->d_result_nonce, &ctx->kawpow_stop };
+    void* args[] = { &ctx->kawpow_dag, &ctx->d_input, &target, &hack_false, &ctx->d_result_nonce, &ctx->kawpow_stop_device };
 
     CUDA_CHECK(ctx->device_id, cudaMemcpy(ctx->d_input, job_blob, 40, cudaMemcpyHostToDevice));
     CUDA_CHECK(ctx->device_id, cudaMemset(ctx->d_result_nonce, 0, sizeof(uint32_t)));
-    CUDA_CHECK(ctx->device_id, cudaMemset(ctx->kawpow_stop, 0, sizeof(uint32_t) * 2));
+    memset(ctx->kawpow_stop_host, 0, sizeof(uint32_t) * 2);
 
     CU_CHECK(ctx->device_id, cuLaunchKernel(
         ctx->kawpow_kernel,
@@ -146,10 +149,7 @@ void hash(nvid_ctx *ctx, uint8_t* job_blob, uint64_t target, uint32_t *rescount,
     ));
     CU_CHECK(ctx->device_id, cuCtxSynchronize());
 
-    uint32_t stop[2];
-    CUDA_CHECK(ctx->device_id, cudaMemcpy(stop, ctx->kawpow_stop, sizeof(stop), cudaMemcpyDeviceToHost));
-
-    *skipped_hashes = stop[1];
+    *skipped_hashes = ctx->kawpow_stop_host[1];
 
     uint32_t results[16];
     CUDA_CHECK(ctx->device_id, cudaMemcpy(results, ctx->d_result_nonce, sizeof(results), cudaMemcpyDeviceToHost));

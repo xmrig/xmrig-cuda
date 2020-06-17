@@ -596,7 +596,7 @@ void release(nvid_ctx *ctx)
 
     cudaFree(ctx->kawpow_cache);
     cudaFree(ctx->kawpow_dag);
-    cudaFree(ctx->kawpow_stop);
+    cudaFreeHost(ctx->kawpow_stop_host);
 
     cuModuleUnload(ctx->module);
     cuModuleUnload(ctx->kawpow_module);
