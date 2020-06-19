@@ -197,9 +197,9 @@ __device__ __forceinline__ void fill_mix(uint32_t* hash_seed, uint32_t lane_id, 
 __global__ void XMRIG_INCLUDE_LAUNCH_BOUNDS progpow_search(const dag_t *g_dag, const uint32_t* job_blob, const uint64_t target, bool hack_false, uint32_t* results, uint32_t* stop)
 {
     if (*stop) {
-        if (threadIdx.x == 0) {
+        if ((threadIdx.x == 0) && ((blockIdx.x & 15) == 0)) {
             // Count groups of skipped hashes (if we don't count them we'll break hashrate display)
-            atomicAdd(stop + 1, blockDim.x);
+            atomicAdd(stop + 1, blockDim.x * 16);
         }
         return;
     }
