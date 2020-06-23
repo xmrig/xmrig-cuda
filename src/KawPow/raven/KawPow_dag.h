@@ -146,7 +146,7 @@ __global__ void ethash_calculate_dag_item(uint32_t start, hash64_t *g_dag, uint6
 
 	const int thread_id = threadIdx.x & 3;
 
-	#pragma unroll(8)
+	#pragma unroll(4)
 	for (uint32_t i = 0; i < ETHASH_DATASET_PARENTS; ++i) {
 		uint32_t parent_index = fast_mod(fnv(node_index ^ i, dag_node.words[i % NODE_WORDS]), light_words);
 

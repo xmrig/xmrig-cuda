@@ -82,14 +82,51 @@ static void background_exec(T&& func)
 }
 
 
+static inline uint32_t clz(uint32_t a)
+{
+#ifdef _MSC_VER
+    unsigned long index;
+    _BitScanReverse(&index, a);
+    return 31 - index;
+#else
+    return __builtin_clz(a);
+#endif
+}
+
+
+void calculate_fast_mod_data(uint32_t divisor, uint32_t& reciprocal, uint32_t& increment, uint32_t& shift)
+{
+    if ((divisor & (divisor - 1)) == 0) {
+        reciprocal = 1;
+        increment = 0;
+        shift = 31U - clz(divisor);
+    }
+    else {
+        shift = 63U - clz(divisor);
+        const uint64_t N = 1ULL << shift;
+        const uint64_t q = N / divisor;
+        const uint64_t r = N - q * divisor;
+        if (r * 2 < divisor)
+        {
+            reciprocal = static_cast<uint32_t>(q);
+            increment = 1;
+        }
+        else
+        {
+            reciprocal = static_cast<uint32_t>(q + 1);
+            increment = 0;
+        }
+    }
+}
+
+
 static void KawPow_build_program(
     std::vector<char>& ptx,
     std::string& lowered_name,
     uint64_t period,
     int arch_major,
     int arch_minor,
-    std::string source,
-    const uint64_t* dag_sizes)
+    std::string source)
 {
     {
         std::lock_guard<std::mutex> g(KawPow_cache_mutex);
@@ -142,18 +179,8 @@ static void KawPow_build_program(
     char opt0[64];
     sprintf(opt0, "--gpu-architecture=compute_%d%d", arch_major, arch_minor);
 
-    std::string options = " -DPROGPOW_DAG_ELEMENTS=";
-
-    constexpr int PERIOD_LENGTH = 3;
-    constexpr int EPOCH_LENGTH = 7500;
-
-    const uint64_t epoch = (period * PERIOD_LENGTH) / EPOCH_LENGTH;
-    const uint64_t dag_elements = dag_sizes[epoch] / 256;
-
-    options += std::to_string(dag_elements);
-
-    const char* opts[2] = { opt0, options.c_str() };
-    result = nvrtcCompileProgram(prog, 2, opts);
+    const char* opts[1] = { opt0 };
+    result = nvrtcCompileProgram(prog, 1, opts);
     if (result != NVRTC_SUCCESS) {
         size_t logSize;
         if (nvrtcGetProgramLogSize(prog, &logSize) == NVRTC_SUCCESS) {
@@ -375,10 +402,10 @@ static void get_code(uint64_t prog_seed, std::string& random_math, std::string& 
     dag_loads = ret.str();
 }
 
-void KawPow_get_program(std::vector<char>& ptx, std::string& lowered_name, uint64_t period, int arch_major, int arch_minor, const uint64_t* dag_sizes, bool background)
+void KawPow_get_program(std::vector<char>& ptx, std::string& lowered_name, uint64_t period, uint32_t threads, int arch_major, int arch_minor, const uint64_t* dag_sizes, bool background)
 {
     if (background) {
-        background_exec([=]() { std::vector<char> tmp; std::string s; KawPow_get_program(tmp, s, period, arch_major, arch_minor, dag_sizes, false); });
+        background_exec([=]() { std::vector<char> tmp; std::string s; KawPow_get_program(tmp, s, period, threads, arch_major, arch_minor, dag_sizes, false); });
         return;
     }
 
@@ -398,6 +425,35 @@ void KawPow_get_program(std::vector<char>& ptx, std::string& lowered_name, uint6
     const char dag_loads_include[] = "XMRIG_INCLUDE_PROGPOW_DATA_LOADS";
     source_code.replace(source_code.find(dag_loads_include), sizeof(dag_loads_include) - 1, dag_loads);
 
+    constexpr int PERIOD_LENGTH = 3;
+    constexpr int EPOCH_LENGTH = 7500;
+
+    const uint64_t epoch = (period * PERIOD_LENGTH) / EPOCH_LENGTH;
+    const uint64_t dag_elements = dag_sizes[epoch] / 256;
+
+    uint32_t r, i, s;
+    calculate_fast_mod_data(dag_elements, r, i, s);
+
+    std::stringstream ss;
+    if (i) {
+        ss << "const uint32_t offset1 = offset + " << i << ";\n";
+        ss << "const uint32_t rcp = " << r << ";\n";
+        ss << "offset -= ((offset1 ? __umulhi(offset1, rcp) : rcp) >> " << (s - 32) << ") * " << dag_elements << ";\n";
+    }
+    else {
+        ss << "offset -= (__umulhi(offset, " << r << ") >> " << (s - 32) << ") * " << dag_elements << ";\n";
+    }
+
+    const char offset_mod_include[] = "XMRIG_INCLUDE_OFFSET_MOD_DAG_ELEMENTS";
+    source_code.replace(source_code.find(offset_mod_include), sizeof(offset_mod_include) - 1, ss.str());
+
+    ss.str(std::string());
+
+    ss << "__launch_bounds__(" << threads << ", 3)";
+
+    const char launch_bounds_include[] = "XMRIG_INCLUDE_LAUNCH_BOUNDS";
+    source_code.replace(source_code.find(launch_bounds_include), sizeof(launch_bounds_include) - 1, ss.str());
+
     {
         std::lock_guard<std::mutex> g(KawPow_cache_mutex);
 
@@ -412,5 +468,5 @@ void KawPow_get_program(std::vector<char>& ptx, std::string& lowered_name, uint6
         }
     }
 
-    KawPow_build_program(ptx, lowered_name, period, arch_major, arch_minor, source_code, dag_sizes);
+    KawPow_build_program(ptx, lowered_name, period, arch_major, arch_minor, source_code);
 }

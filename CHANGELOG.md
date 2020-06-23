@@ -1,3 +1,7 @@
+# v6.2.1
+- [#54](https://github.com/xmrig/xmrig-cuda/pull/54) Optimized KawPow, about 2% hashrate improvement, 10% faster DAG initialization.
+- [#55](https://github.com/xmrig/xmrig-cuda/pull/55) Added fast job switching for KawPow, almost zero stale shares.
+
 # v6.2.0
 - [#52](https://github.com/xmrig/xmrig-cuda/pull/52) Added new algorithm `cn/ccx` for Conceal.
 - [#53](https://github.com/xmrig/xmrig-cuda/pull/53) Fixed build with CUDA 11.
