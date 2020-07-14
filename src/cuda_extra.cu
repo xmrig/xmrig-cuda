@@ -282,7 +282,8 @@ void cryptonight_extra_cpu_set_data(nvid_ctx *ctx, const void *data, size_t len)
     ctx->inputlen = static_cast<unsigned int>(len);
 
     // Use temporary 200 byte buffer with zeros in the end (required for AstroBWT)
-    uint8_t buf[200] = {};
+    // Buffer increased to 384 bytes to accomodate the Haven offshore pricing_record
+    uint8_t buf[384] = {};
     memcpy(buf, data, len);
 
     CUDA_CHECK(ctx->device_id, cudaMemcpy(ctx->d_input, buf, sizeof(buf), cudaMemcpyHostToDevice));
@@ -343,7 +344,8 @@ int cryptonight_extra_cpu_init(nvid_ctx *ctx, const xmrig::Algorithm &algorithm,
     }
 
     // POW block format http://monero.wikia.com/wiki/PoW_Block_Header_Format
-    CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_input,        200));
+    // Buffer increased to 384 bytes to accomodate the Haven offshore pricing_record
+    CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_input,        384));
     if (algorithm.family() != Algorithm::KAWPOW) {
         CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_result_count, sizeof(uint32_t)));
     }
