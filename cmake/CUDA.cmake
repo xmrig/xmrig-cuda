@@ -1,3 +1,5 @@
+add_definitions(-DCUB_IGNORE_DEPRECATED_CPP_DIALECT -DTHRUST_IGNORE_DEPRECATED_CPP_DIALECT)
+
 option(XMRIG_LARGEGRID "Support large CUDA block count > 128" ON)
 if (XMRIG_LARGEGRID)
     add_definitions("-DXMRIG_LARGEGRID=${XMRIG_LARGEGRID}")
@@ -23,11 +25,17 @@ find_library(CUDA_NVRTC_LIB libnvrtc nvrtc HINTS "${CUDA_TOOLKIT_ROOT_DIR}/lib64
 
 set(LIBS ${LIBS} ${CUDA_LIBRARIES} ${CUDA_LIB} ${CUDA_NVRTC_LIB})
 
-set(DEFAULT_CUDA_ARCH "30;50")
+set(DEFAULT_CUDA_ARCH "50")
 
 # Fermi GPUs are only supported with CUDA < 9.0
 if (CUDA_VERSION VERSION_LESS 9.0)
     list(APPEND DEFAULT_CUDA_ARCH "20;21")
+endif()
+
+if (CUDA_VERSION VERSION_LESS 11.0)
+    list(APPEND DEFAULT_CUDA_ARCH "30")
+else()
+    list(APPEND DEFAULT_CUDA_ARCH "35")
 endif()
 
 # add Pascal support for CUDA >= 8.0
@@ -85,9 +93,10 @@ elseif("${CUDA_COMPILER}" STREQUAL "nvcc")
     if (CUDA_VERSION VERSION_LESS 8.0)
         add_definitions(-D_FORCE_INLINES)
         add_definitions(-D_MWAITXINTRIN_H_INCLUDED)
-    elseif(CUDA_VERSION VERSION_LESS 9.0)
-        set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} "-Wno-deprecated-gpu-targets")
     endif()
+
+    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} "-Wno-deprecated-gpu-targets")
+
     foreach(CUDA_ARCH_ELEM ${CUDA_ARCH})
         # set flags to create device code for the given architecture
         if("${CUDA_ARCH_ELEM}" STREQUAL "21")
