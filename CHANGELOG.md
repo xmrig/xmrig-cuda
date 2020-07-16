@@ -1,3 +1,7 @@
+# v6.3.0
+- [#59](https://github.com/xmrig/xmrig-cuda/pull/59) Added support for upcoming Haven offshore fork.
+- Fixed build with recent CUDA 11.
+
 # v6.2.1
 - [#54](https://github.com/xmrig/xmrig-cuda/pull/54) Optimized KawPow, about 2% hashrate improvement, 10% faster DAG initialization.
 - [#55](https://github.com/xmrig/xmrig-cuda/pull/55) Added fast job switching for KawPow, almost zero stale shares.
