@@ -45,6 +45,11 @@ typedef unsigned long long DataLength;
 #include "cuda_aes.hpp"
 #include "crypto/cn/CnAlgo.h"
 
+// POW block format http://monero.wikia.com/wiki/PoW_Block_Header_Format
+// Buffer increased to 384 bytes to accomodate the Haven offshore pricing_record
+// Round it up to 408 (136*3) for a convenient keccak calculation in OpenCL
+static constexpr size_t kMaxBlobSize = 408;
+
 __constant__ uint8_t d_sub_byte[16][16] ={
     {0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76 },
     {0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0 },
@@ -119,7 +124,7 @@ template<xmrig::Algorithm::Id ALGO>
 __global__ void cryptonight_extra_gpu_prepare(
         int threads,
         uint32_t *__restrict__ d_input,
-        uint32_t len,
+        int len,
         uint32_t startNonce,
         uint32_t *__restrict__ d_ctx_state,
         uint32_t *__restrict__ d_ctx_state2,
@@ -148,15 +153,19 @@ __global__ void cryptonight_extra_gpu_prepare(
     uint32_t ctx_b[4];
     uint32_t ctx_key1[40];
     uint32_t ctx_key2[40];
-    uint32_t input[32];
 
-    memcpy(input, d_input, len);
-    uint32_t nonce = startNonce + thread;
-    for (int i = 0; i < sizeof (uint32_t ); ++i) {
-        (((char *)input) + 39)[i] = ((char*) (&nonce))[i]; //take care of pointer alignment
+    {
+        uint64_t input[kMaxBlobSize / sizeof(uint64_t)];
+
+        memcpy(input, d_input, len);
+        uint32_t nonce = startNonce + thread;
+        for (int i = 0; i < sizeof(uint32_t); ++i) {
+            (((char *)input) + 39)[i] = ((char*)(&nonce))[i]; //take care of pointer alignment
+        }
+
+        cn_keccak(input, len, (uint8_t *)ctx_state);
     }
 
-    cn_keccak((uint8_t *) input, len, (uint8_t *) ctx_state);
     cryptonight_aes_set_key(ctx_key1, ctx_state);
     cryptonight_aes_set_key(ctx_key2, ctx_state + 8);
 
@@ -279,14 +288,18 @@ __global__ void cryptonight_extra_gpu_final( int threads, uint64_t target, uint3
 
 void cryptonight_extra_cpu_set_data(nvid_ctx *ctx, const void *data, size_t len)
 {
-    ctx->inputlen = static_cast<unsigned int>(len);
+    uint8_t buf[kMaxBlobSize];
 
-    // Use temporary 200 byte buffer with zeros in the end (required for AstroBWT)
-    // Buffer increased to 384 bytes to accomodate the Haven offshore pricing_record
-    uint8_t buf[384] = {};
+    const int inlen = static_cast<int>(len + 136 - (len % 136));
+
     memcpy(buf, data, len);
+    buf[len] = 1;
+    memset(buf + len + 1, 0, inlen - len - 1);
+    buf[inlen - 1] |= 0x80;
 
-    CUDA_CHECK(ctx->device_id, cudaMemcpy(ctx->d_input, buf, sizeof(buf), cudaMemcpyHostToDevice));
+    ctx->inputlen = static_cast<unsigned int>(inlen);
+
+    CUDA_CHECK(ctx->device_id, cudaMemcpy(ctx->d_input, buf, ctx->inputlen, cudaMemcpyHostToDevice));
 }
 
 
@@ -343,9 +356,7 @@ int cryptonight_extra_cpu_init(nvid_ctx *ctx, const xmrig::Algorithm &algorithm,
         ctx->d_ctx_state2 = ctx->d_ctx_state;
     }
 
-    // POW block format http://monero.wikia.com/wiki/PoW_Block_Header_Format
-    // Buffer increased to 384 bytes to accomodate the Haven offshore pricing_record
-    CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_input,        384));
+    CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_input, kMaxBlobSize));
     if (algorithm.family() != Algorithm::KAWPOW) {
         CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_result_count, sizeof(uint32_t)));
     }
