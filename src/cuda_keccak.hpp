@@ -150,16 +150,23 @@ __device__ __forceinline__ void cn_keccakf(uint64_t *s)
 	}
 }
 
-__device__ __forceinline__ void cn_keccak(const uint8_t * __restrict__ in, uint32_t len, uint8_t * __restrict__ md)
+__device__ __forceinline__ void cn_keccak(const uint64_t * __restrict__ input, int inlen, uint8_t * __restrict__ md)
 {
 	uint64_t st[25];
 
-	MEMSET8(st + 8, 0x00, 25 - 8);
-	memcpy(st, in, len);
-	((uint8_t*)st)[len] = 0x01;
-	st[16] = 0x8000000000000000ULL;
+	#pragma unroll
+	for (int i = 0; i < 25; ++i) {
+		st[i] = 0;
+	}
 
-	cn_keccakf(st);
+	// Input length must be a multiple of 136 and padded on the host side
+	for (int i = 0; inlen > 0; i += 17, inlen -= 136) {
+		#pragma unroll
+		for (int j = 0; j < 17; ++j) {
+			st[j] ^= input[i + j];
+		}
+		cn_keccakf(st);
+	}
 
 	MEMCPY8(md, st, 25);
 	return;

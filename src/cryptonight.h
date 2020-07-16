@@ -60,7 +60,7 @@ struct nvid_ctx {
     bool ready                          = false;
 
     uint32_t *d_input                   = nullptr;
-    uint32_t inputlen                   = 0;
+    int inputlen                        = 0;
     uint32_t *d_result_count            = nullptr;
     uint32_t *d_result_nonce            = nullptr;
     uint32_t *d_long_state              = nullptr;
