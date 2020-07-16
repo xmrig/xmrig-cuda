@@ -47,7 +47,7 @@ typedef unsigned long long DataLength;
 
 // POW block format http://monero.wikia.com/wiki/PoW_Block_Header_Format
 // Buffer increased to 384 bytes to accomodate the Haven offshore pricing_record
-// Round it up to 408 (136*3) for a convenient keccak calculation in OpenCL
+// Round it up to 408 (136*3) for a convenient keccak calculation
 static constexpr size_t kMaxBlobSize = 408;
 
 __constant__ uint8_t d_sub_byte[16][16] ={
