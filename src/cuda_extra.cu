@@ -303,14 +303,10 @@ void cryptonight_extra_cpu_set_data(nvid_ctx *ctx, const void *data, size_t len)
 }
 
 
-void rx_extra_cpu_set_data(nvid_ctx *ctx, const void *data, size_t len)
+void cuda_extra_cpu_set_data(nvid_ctx *ctx, const void *data, size_t len)
 {
     ctx->inputlen = static_cast<unsigned int>(len);
-
-    uint8_t buf[kMaxBlobSize];
-    memcpy(buf, data, len);
-
-    CUDA_CHECK(ctx->device_id, cudaMemcpy(ctx->d_input, buf, len, cudaMemcpyHostToDevice));
+    CUDA_CHECK(ctx->device_id, cudaMemcpy(ctx->d_input, data, len, cudaMemcpyHostToDevice));
 }
 
 

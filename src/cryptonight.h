@@ -121,7 +121,7 @@ void cryptonight_extra_cpu_prepare(nvid_ctx *ctx, uint32_t startNonce, const xmr
 void cryptonight_gpu_hash(nvid_ctx *ctx, const xmrig::Algorithm &algorithm, uint64_t height, uint32_t startNonce);
 void cryptonight_extra_cpu_final(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce, const xmrig::Algorithm &algorithm);
 
-void rx_extra_cpu_set_data(nvid_ctx *ctx, const void *data, size_t len);
+void cuda_extra_cpu_set_data(nvid_ctx *ctx, const void *data, size_t len);
 void randomx_prepare(nvid_ctx *ctx, const void *dataset, size_t dataset_size, uint32_t batch_size);
 
 namespace RandomX_Arqma   { void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce, uint32_t batch_size); }
