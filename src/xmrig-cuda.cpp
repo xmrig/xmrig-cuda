@@ -354,8 +354,10 @@ bool setJob_v2(nvid_ctx *ctx, const void *data, size_t size, const char *algo)
     }
 
     try {
-        if (xmrig::Algorithm::family(ctx->algorithm) == xmrig::Algorithm::RANDOM_X) {
-            rx_extra_cpu_set_data(ctx, data, size);
+        const xmrig::Algorithm::Family f = xmrig::Algorithm::family(ctx->algorithm);
+
+        if ((f == xmrig::Algorithm::RANDOM_X) || (f == xmrig::Algorithm::ASTROBWT)) {
+            cuda_extra_cpu_set_data(ctx, data, size);
         }
         else {
             cryptonight_extra_cpu_set_data(ctx, data, size);
@@ -381,8 +383,10 @@ bool setJob(nvid_ctx *ctx, const void *data, size_t size, int32_t algo)
     ctx->algorithm = algo;
 
     try {
-        if (xmrig::Algorithm::family(static_cast<xmrig::Algorithm::Id>(algo)) == xmrig::Algorithm::RANDOM_X) {
-            rx_extra_cpu_set_data(ctx, data, size);
+        const xmrig::Algorithm::Family f = xmrig::Algorithm::family(ctx->algorithm);
+
+        if ((f == xmrig::Algorithm::RANDOM_X) || (f == xmrig::Algorithm::ASTROBWT)) {
+            cuda_extra_cpu_set_data(ctx, data, size);
         }
         else {
             cryptonight_extra_cpu_set_data(ctx, data, size);
