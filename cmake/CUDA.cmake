@@ -18,12 +18,20 @@ list(APPEND CMAKE_PREFIX_PATH "$ENV{CUDA_ROOT}")
 list(APPEND CMAKE_PREFIX_PATH "$ENV{CMAKE_PREFIX_PATH}")
 
 set(CUDA_STATIC ON)
-find_package(CUDA 8.0 REQUIRED)
+find_package(CUDA 9.0 REQUIRED)
 
-find_library(CUDA_LIB libcuda cuda HINTS "${CUDA_TOOLKIT_ROOT_DIR}/lib64" "${LIBCUDA_LIBRARY_DIR}" "${CUDA_TOOLKIT_ROOT_DIR}/lib/x64" /usr/lib64 /usr/local/cuda/lib64)
-find_library(CUDA_NVRTC_LIB libnvrtc nvrtc HINTS "${CUDA_TOOLKIT_ROOT_DIR}/lib64" "${LIBNVRTC_LIBRARY_DIR}" "${CUDA_TOOLKIT_ROOT_DIR}/lib/x64" /usr/lib64 /usr/local/cuda/lib64)
+if (WITH_DRIVER_API)
+    find_library(CUDA_LIB libcuda cuda HINTS "${CUDA_TOOLKIT_ROOT_DIR}/lib64" "${LIBCUDA_LIBRARY_DIR}" "${CUDA_TOOLKIT_ROOT_DIR}/lib/x64" /usr/lib64 /usr/local/cuda/lib64)
+    find_library(CUDA_NVRTC_LIB libnvrtc nvrtc HINTS "${CUDA_TOOLKIT_ROOT_DIR}/lib64" "${LIBNVRTC_LIBRARY_DIR}" "${CUDA_TOOLKIT_ROOT_DIR}/lib/x64" /usr/lib64 /usr/local/cuda/lib64)
 
-set(LIBS ${LIBS} ${CUDA_LIBRARIES} ${CUDA_LIB} ${CUDA_NVRTC_LIB})
+    set(LIBS ${LIBS} ${CUDA_LIBRARIES} ${CUDA_LIB} ${CUDA_NVRTC_LIB})
+
+    add_definitions(-DXMRIG_DRIVER_API)
+else()
+    set(LIBS ${LIBS} ${CUDA_LIBRARIES})
+
+    remove_definitions(-DXMRIG_DRIVER_API)
+endif()
 
 set(DEFAULT_CUDA_ARCH "50")
 
@@ -64,6 +72,7 @@ foreach(CUDA_ARCH_ELEM ${CUDA_ARCH})
                             "Use '20' (for compute architecture 2.0) or higher.")
     endif()
 endforeach()
+
 list(SORT CUDA_ARCH)
 
 option(CUDA_SHOW_REGISTER "Show registers used for each kernel and compute architecture" OFF)
@@ -102,8 +111,7 @@ elseif("${CUDA_COMPILER}" STREQUAL "nvcc")
         if("${CUDA_ARCH_ELEM}" STREQUAL "21")
             # "2.1" actually does run faster when compiled as itself, versus in "2.0" compatible mode
             # strange virtual code type on top of compute_20, with no compute_21 (so the normal rule fails)
-            set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}
-                    "--generate-code arch=compute_20,code=sm_21")
+            set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} "--generate-code arch=compute_20,code=sm_21")
         else()
             set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}
                     "--generate-code arch=compute_${CUDA_ARCH_ELEM},code=sm_${CUDA_ARCH_ELEM} --generate-code arch=compute_${CUDA_ARCH_ELEM},code=compute_${CUDA_ARCH_ELEM}")
@@ -119,21 +127,36 @@ elseif("${CUDA_COMPILER}" STREQUAL "nvcc")
     if (CUDA_SHOW_CODELINES)
         set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS}" --source-in-ptx -lineinfo)
         set(CUDA_KEEP_FILES ON CACHE BOOL "activate keep files" FORCE)
-    endif(CUDA_SHOW_CODELINES)
+    endif()
 
     if (CUDA_SHOW_REGISTER)
         set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS}" -Xptxas=-v)
-    endif(CUDA_SHOW_REGISTER)
+    endif()
 
     if (CUDA_KEEP_FILES)
         set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS}" --keep --keep-dir "${PROJECT_BINARY_DIR}")
-    endif(CUDA_KEEP_FILES)
+    endif()
 
 else()
     message(FATAL_ERROR "selected CUDA compiler '${CUDA_COMPILER}' is not supported")
 endif()
 
-set(CUDA_RANDOMX_SOURCES
+set(CUDA_SOURCES
+    src/cryptonight.h
+    src/cuda_aes.hpp
+    src/cuda_blake.hpp
+    src/cuda_core.cu
+    src/cuda_device.hpp
+    src/cuda_extra.cu
+    src/cuda_extra.h
+    src/cuda_fast_int_math_v2.hpp
+    src/cuda_groestl.hpp
+    src/cuda_jh.hpp
+    src/cuda_keccak.hpp
+    src/cuda_skein.hpp
+)
+
+list(APPEND CUDA_SOURCES
     src/RandomX/aes_cuda.hpp
     src/RandomX/arqma/configuration.h
     src/RandomX/arqma/randomx_arqma.cu
@@ -152,40 +175,27 @@ set(CUDA_RANDOMX_SOURCES
     src/RandomX/wownero/randomx_wownero.cu
 )
 
-set(CUDA_ASTROBWT_SOURCES
+list(APPEND CUDA_SOURCES
     src/AstroBWT/dero/AstroBWT.cu
     src/AstroBWT/dero/BWT.h
     src/AstroBWT/dero/salsa20.h
     src/AstroBWT/dero/sha3.h
 )
 
-set(CUDA_KAWPOW_SOURCES
-    src/KawPow/raven/KawPow.cu
-    src/KawPow/raven/CudaKawPow_gen.cpp
-    src/KawPow/raven/CudaKawPow_gen.h
-)
-
-set(CUDA_SOURCES
-    src/cryptonight.h
-    src/cuda_aes.hpp
-    src/cuda_blake.hpp
-    src/cuda_core.cu
-    src/cuda_device.hpp
-    src/cuda_extra.cu
-    src/cuda_extra.h
-    src/cuda_fast_int_math_v2.hpp
-    src/cuda_groestl.hpp
-    src/cuda_jh.hpp
-    src/cuda_keccak.hpp
-    src/cuda_skein.hpp
-)
+if (WITH_DRIVER_API)
+    list(APPEND CUDA_SOURCES
+        src/KawPow/raven/CudaKawPow_gen.cpp
+        src/KawPow/raven/CudaKawPow_gen.h
+        src/KawPow/raven/KawPow.cu
+    )
+endif()
 
 if("${CUDA_COMPILER}" STREQUAL "clang")
-    add_library(xmrig-cu STATIC ${CUDA_SOURCES} ${CUDA_RANDOMX_SOURCES} ${CUDA_ASTROBWT_SOURCES} ${CUDA_KAWPOW_SOURCES})
+    add_library(xmrig-cu STATIC ${CUDA_SOURCES})
 
     set_target_properties(xmrig-cu PROPERTIES COMPILE_FLAGS ${CLANG_BUILD_FLAGS})
     set_target_properties(xmrig-cu PROPERTIES LINKER_LANGUAGE CXX)
-    set_source_files_properties(${CUDA_SOURCES} ${CUDA_RANDOMX_SOURCES} PROPERTIES LANGUAGE CXX)
+    set_source_files_properties(${CUDA_SOURCES} PROPERTIES LANGUAGE CXX)
 else()
-    cuda_add_library(xmrig-cu STATIC ${CUDA_SOURCES} ${CUDA_RANDOMX_SOURCES} ${CUDA_ASTROBWT_SOURCES} ${CUDA_KAWPOW_SOURCES})
+    cuda_add_library(xmrig-cu STATIC ${CUDA_SOURCES})
 endif()

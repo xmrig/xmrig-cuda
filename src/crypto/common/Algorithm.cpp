@@ -59,7 +59,6 @@ static AlgoName const algorithm_names[] = {
     { "cn/0",             Algorithm::CN_0            },
     { "cn/1",             Algorithm::CN_1            },
     { "cn/2",             Algorithm::CN_2            },
-    { "cn/r",             Algorithm::CN_R            },
     { "cn/fast",          Algorithm::CN_FAST         },
     { "cn/half",          Algorithm::CN_HALF         },
     { "cn/xao",           Algorithm::CN_XAO          },
@@ -76,7 +75,10 @@ static AlgoName const algorithm_names[] = {
     { "cn-pico/tlo",      Algorithm::CN_PICO_TLO     },
     { "cn/ccx",           Algorithm::CN_CCX          },
     { "astrobwt",         Algorithm::ASTROBWT_DERO   },
+#   ifdef XMRIG_DRIVER_API
     { "kawpow",           Algorithm::KAWPOW_RVN      },
+    { "cn/r",             Algorithm::CN_R            },
+#   endif
 };
 
 
