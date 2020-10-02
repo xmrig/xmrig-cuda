@@ -52,7 +52,6 @@ struct AlgoName
 static AlgoName const algorithm_names[] = {
     { "rx/0",             Algorithm::RX_0            },
     { "rx/wow",           Algorithm::RX_WOW          },
-    { "rx/loki",          Algorithm::RX_LOKI         },
     { "rx/arq",           Algorithm::RX_ARQ          },
     { "rx/sfx",           Algorithm::RX_SFX          },
     { "rx/keva",          Algorithm::RX_KEVA         },
