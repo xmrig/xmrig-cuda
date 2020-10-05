@@ -1,11 +1,11 @@
 # xmrig-cuda
 
-[![Github All Releases](https://img.shields.io/github/downloads/xmrig/xmrig/total.svg)](../../releases)
-[![GitHub release](https://img.shields.io/github/release/xmrig/xmrig/all.svg)](../../releases/latest)
-[![GitHub Release Date](https://img.shields.io/github/release-date/xmrig/xmrig.svg)](../../releases/latest)
-[![GitHub license](https://img.shields.io/github/license/xmrig/xmrig.svg)](./LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/xmrig/xmrig.svg)](../../stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/xmrig/xmrig.svg)](../../network)
+[![Github All Releases](https://img.shields.io/github/downloads/xmrig/xmrig-cuda/total.svg)](../../releases)
+[![GitHub release](https://img.shields.io/github/release/xmrig/xmrig-cuda/all.svg)](../../releases/latest)
+[![GitHub Release Date](https://img.shields.io/github/release-date/xmrig/xmrig-cuda.svg)](../../releases/latest)
+[![GitHub license](https://img.shields.io/github/license/xmrig/xmrig-cuda.svg)](./LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/xmrig/xmrig-cuda.svg)](../../stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/xmrig/xmrig-cuda.svg)](../../network)
 
 This repository is NVIDIA CUDA plugin for [XMRig](../../../xmrig) miner v4.5+ and it adds support for NVIDIA GPUs in [XMRig](../../../xmrig) miner.
 
