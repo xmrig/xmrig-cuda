@@ -60,7 +60,6 @@ public:
         CN_CCX,        // "cn/ccx"           Conceal (CCX)
         RX_0,          // "rx/0"             RandomX (reference configuration).
         RX_WOW,        // "rx/wow"           RandomWOW (Wownero).
-        RX_LOKI,       // "rx/loki"          RandomXL (Loki).
         RX_ARQ,        // "rx/arq"           RandomARQ (Arqma).
         RX_SFX,        // "rx/sfx"           RandomSFX (Safex Cash).
         RX_KEVA,       // "rx/keva"          RandomKV (Keva).
@@ -106,7 +105,6 @@ public:
     {
         switch (m_id) {
         case RX_0:
-        case RX_LOKI:
         case RX_SFX:
             return 0x40000;
 
@@ -154,7 +152,6 @@ public:
         if (f == RANDOM_X) {
             switch (m_id) {
             case RX_0:
-            case RX_LOKI:
             case RX_SFX:
                 return oneMiB * 2;
 
@@ -232,7 +229,6 @@ public:
 
         case RX_0:
         case RX_WOW:
-        case RX_LOKI:
         case RX_ARQ:
         case RX_SFX:
         case RX_KEVA:
