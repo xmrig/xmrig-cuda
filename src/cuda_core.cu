@@ -748,6 +748,7 @@ void cryptonight_core_gpu_hash(nvid_ctx* ctx, uint32_t nonce)
     }
 
     for (int i = 0; i < partcount; i++) {
+#       ifdef XMRIG_DRIVER_API
         if (ALGO == Algorithm::CN_R) {
             int threads = ctx->device_blocks * ctx->device_threads;
             void* args[] = { &threads, &ctx->device_bfactor, &i, &ctx->d_long_state, &ctx->d_ctx_a, &ctx->d_ctx_b, &ctx->d_ctx_state, &nonce, &ctx->d_input };
@@ -759,7 +760,9 @@ void cryptonight_core_gpu_hash(nvid_ctx* ctx, uint32_t nonce)
                 args, 0
             ));
             CU_CHECK(ctx->device_id, cuCtxSynchronize());
-        } else if (BASE == Algorithm::CN_2) {
+        } else
+#       endif
+        if (BASE == Algorithm::CN_2) {
             CUDA_CHECK_KERNEL(ctx->device_id, cryptonight_core_gpu_phase2_double<ITERATIONS, MEM, MASK, ALGO><<<
                 grid,
                 block2,
@@ -820,6 +823,7 @@ void cryptonight_gpu_hash(nvid_ctx *ctx, const xmrig::Algorithm &algorithm, uint
 
     if (algorithm.family() == Algorithm::CN) {
         if (algorithm == Algorithm::CN_R) {
+#           ifdef XMRIG_DRIVER_API
             if ((ctx->algorithm != algorithm) || (ctx->kernel_height != height)) {
                 if (ctx->module) {
                     cuModuleUnload(ctx->module);
@@ -837,6 +841,7 @@ void cryptonight_gpu_hash(nvid_ctx *ctx, const xmrig::Algorithm &algorithm, uint
 
                 CryptonightR_get_program(ptx, lowered_name, height + 1, ctx->device_arch[0], ctx->device_arch[1], true); // FIXME
             }
+#           endif
         }
 
         switch (algorithm.id()) {
@@ -852,9 +857,11 @@ void cryptonight_gpu_hash(nvid_ctx *ctx, const xmrig::Algorithm &algorithm, uint
             cryptonight_core_gpu_hash<Algorithm::CN_2>(ctx, startNonce);
             break;
 
+#       ifdef XMRIG_DRIVER_API
         case Algorithm::CN_R:
             cryptonight_core_gpu_hash<Algorithm::CN_R>(ctx, startNonce);
             break;
+#       endif
 
         case Algorithm::CN_FAST:
             cryptonight_core_gpu_hash<Algorithm::CN_FAST>(ctx, startNonce);

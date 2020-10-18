@@ -31,6 +31,7 @@
     __VA_ARGS__;                        \
     CUDA_CHECK(id, cudaGetLastError())
 
+#ifdef XMRIG_DRIVER_API
 #define CU_CHECK(id, ...) {                                                                             \
     CUresult result = __VA_ARGS__;                                                                      \
     if(result != CUDA_SUCCESS){                                                                         \
@@ -40,3 +41,4 @@
     }                                                                                                   \
 }                                                                                                       \
 ( (void) 0 )
+#endif
