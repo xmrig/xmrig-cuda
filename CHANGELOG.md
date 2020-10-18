@@ -1,3 +1,6 @@
+# v6.4.0
+- [#70](https://github.com/xmrig/xmrig-cuda/pull/70) RandomX: removed `rx/loki` algorithm.
+
 # v6.3.2
 - [#65](https://github.com/xmrig/xmrig-cuda/pull/65) Fixed broken AstroBWT.
 
