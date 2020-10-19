@@ -64,6 +64,7 @@ public:
         RX_SFX,        // "rx/sfx"           RandomSFX (Safex Cash).
         RX_KEVA,       // "rx/keva"          RandomKV (Keva).
         AR2_CHUKWA,    // "argon2/chukwa"    Argon2id (Chukwa).
+        AR2_CHUKWA_V2, // "argon2/chukwav2"  Argon2id (Chukwa v2).
         AR2_WRKZ,      // "argon2/wrkz"      Argon2id (WRKZ)
         ASTROBWT_DERO, // "astrobwt"         AstroBWT (Dero)
         KAWPOW_RVN,    // "kawpow/rvn"       KawPow (RVN)
@@ -172,6 +173,9 @@ public:
             case AR2_CHUKWA:
                 return oneMiB / 2;
 
+            case AR2_CHUKWA_V2:
+                return oneMiB;
+
             case AR2_WRKZ:
                 return oneMiB / 4;
 
@@ -235,6 +239,7 @@ public:
             return RANDOM_X;
 
         case AR2_CHUKWA:
+        case AR2_CHUKWA_V2:
         case AR2_WRKZ:
             return ARGON2;
 
