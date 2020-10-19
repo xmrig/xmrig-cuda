@@ -1,3 +1,6 @@
+# v6.4.1
+- [#72](https://github.com/xmrig/xmrig-cuda/issues/72) Fixed broken KawPow on Linux.
+
 # v6.4.0
 - [#70](https://github.com/xmrig/xmrig-cuda/pull/70) RandomX: removed `rx/loki` algorithm.
 

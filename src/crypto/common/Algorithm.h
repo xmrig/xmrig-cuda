@@ -64,6 +64,7 @@ public:
         RX_SFX,        // "rx/sfx"           RandomSFX (Safex Cash).
         RX_KEVA,       // "rx/keva"          RandomKV (Keva).
         AR2_CHUKWA,    // "argon2/chukwa"    Argon2id (Chukwa).
+        AR2_CHUKWA_V2, // "argon2/chukwav2"  Argon2id (Chukwa v2).
         AR2_WRKZ,      // "argon2/wrkz"      Argon2id (WRKZ)
         ASTROBWT_DERO, // "astrobwt"         AstroBWT (Dero)
         KAWPOW_RVN,    // "kawpow/rvn"       KawPow (RVN)
@@ -83,7 +84,7 @@ public:
     };
 
     inline Algorithm() = default;
-    inline Algorithm(const char *algo) : m_id(parse(algo))                                      {}
+    inline Algorithm(const char *algo) : m_id(parseName(algo))                                  {}
     inline Algorithm(Id id) : m_id(id)                                                          {}
     inline Algorithm(int id) : m_id(id > INVALID && id < MAX ? static_cast<Id>(id) : INVALID)   {}
 
@@ -98,8 +99,6 @@ public:
     inline bool operator==(Algorithm::Id id) const        { return m_id == id; }
     inline bool operator==(const Algorithm &other) const  { return isEqual(other); }
     inline operator Algorithm::Id() const                 { return m_id; }
-
-    static Id parse(const char *name);
 
     size_t l2() const
     {
@@ -172,6 +171,9 @@ public:
             case AR2_CHUKWA:
                 return oneMiB / 2;
 
+            case AR2_CHUKWA_V2:
+                return oneMiB;
+
             case AR2_WRKZ:
                 return oneMiB / 4;
 
@@ -235,6 +237,7 @@ public:
             return RANDOM_X;
 
         case AR2_CHUKWA:
+        case AR2_CHUKWA_V2:
         case AR2_WRKZ:
             return ARGON2;
 
@@ -252,6 +255,8 @@ public:
     }
 
 private:
+    static Id parseName(const char *name);
+
     Id m_id = INVALID;
 };
 

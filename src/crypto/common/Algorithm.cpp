@@ -85,7 +85,7 @@ static AlgoName const algorithm_names[] = {
 
 
 
-xmrig::Algorithm::Id xmrig::Algorithm::parse(const char *name)
+xmrig::Algorithm::Id xmrig::Algorithm::parseName(const char *name)
 {
     if (name == nullptr || strlen(name) < 1) {
         return INVALID;
