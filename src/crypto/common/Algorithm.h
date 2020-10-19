@@ -84,7 +84,7 @@ public:
     };
 
     inline Algorithm() = default;
-    inline Algorithm(const char *algo) : m_id(parse(algo))                                      {}
+    inline Algorithm(const char *algo) : m_id(parseName(algo))                                  {}
     inline Algorithm(Id id) : m_id(id)                                                          {}
     inline Algorithm(int id) : m_id(id > INVALID && id < MAX ? static_cast<Id>(id) : INVALID)   {}
 
@@ -99,8 +99,6 @@ public:
     inline bool operator==(Algorithm::Id id) const        { return m_id == id; }
     inline bool operator==(const Algorithm &other) const  { return isEqual(other); }
     inline operator Algorithm::Id() const                 { return m_id; }
-
-    static Id parse(const char *name);
 
     size_t l2() const
     {
@@ -257,6 +255,8 @@ public:
     }
 
 private:
+    static Id parseName(const char *name);
+
     Id m_id = INVALID;
 };
 
