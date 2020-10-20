@@ -34,7 +34,7 @@
 #include "crypto/common/Algorithm.h"
 
 
-namespace xmrig
+namespace xmrig_cuda
 {
 
 
@@ -221,7 +221,7 @@ template<> constexpr inline size_t CnAlgo<Algorithm::CN_PICO_TLO>::memory() cons
 template<> constexpr inline uint32_t CnAlgo<Algorithm::CN_PICO_0>::mask() const             { return 0x1FFF0; }
 
 
-} /* namespace xmrig */
+} /* namespace xmrig_cuda */
 
 
 #endif /* XMRIG_CN_ALGO_H */

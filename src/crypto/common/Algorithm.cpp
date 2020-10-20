@@ -39,7 +39,7 @@
 #endif
 
 
-namespace xmrig {
+namespace xmrig_cuda {
 
 
 struct AlgoName
@@ -81,11 +81,11 @@ static AlgoName const algorithm_names[] = {
 };
 
 
-} /* namespace xmrig */
+} /* namespace xmrig_cuda */
 
 
 
-xmrig::Algorithm::Id xmrig::Algorithm::parseName(const char *name)
+xmrig_cuda::Algorithm::Id xmrig_cuda::Algorithm::parseName(const char *name)
 {
     if (name == nullptr || strlen(name) < 1) {
         return INVALID;

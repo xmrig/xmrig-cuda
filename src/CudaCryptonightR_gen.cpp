@@ -259,7 +259,7 @@ void CryptonightR_get_program(std::vector<char>& ptx, std::string& lowered_name,
     }
 
     V4_Instruction code[256];
-    const int code_size = v4_random_math_init<xmrig::Algorithm::CN_R>(code, height);
+    const int code_size = v4_random_math_init<xmrig_cuda::Algorithm::CN_R>(code, height);
 
     std::string source_code(source_code_template, offset);
     source_code.append(get_code(code, code_size));

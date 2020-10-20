@@ -123,7 +123,7 @@ bool cnHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t height, uint64_t target
 
 bool deviceInfo_v2(nvid_ctx *ctx, int32_t blocks, int32_t threads, const char *algo, int32_t dataset_host)
 {
-    using namespace xmrig;
+    using namespace xmrig_cuda;
 
     if (algo != nullptr) {
         ctx->algorithm = algo;
@@ -168,24 +168,26 @@ bool deviceInit(nvid_ctx *ctx)
 
 bool rxHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce)
 {
+    using namespace xmrig_cuda;
+
     resetError(ctx->device_id);
 
     try {
         switch (ctx->algorithm.id()) {
-        case xmrig::Algorithm::RX_0:
-        case xmrig::Algorithm::RX_SFX:
+        case Algorithm::RX_0:
+        case Algorithm::RX_SFX:
             RandomX_Monero::hash(ctx, startNonce, target, rescount, resnonce, ctx->rx_batch_size);
             break;
 
-        case xmrig::Algorithm::RX_WOW:
+        case Algorithm::RX_WOW:
             RandomX_Wownero::hash(ctx, startNonce, target, rescount, resnonce, ctx->rx_batch_size);
             break;
 
-        case xmrig::Algorithm::RX_ARQ:
+        case Algorithm::RX_ARQ:
             RandomX_Arqma::hash(ctx, startNonce, target, rescount, resnonce, ctx->rx_batch_size);
             break;
 
-        case xmrig::Algorithm::RX_KEVA:
+        case Algorithm::RX_KEVA:
             RandomX_Keva::hash(ctx, startNonce, target, rescount, resnonce, ctx->rx_batch_size);
             break;
 
@@ -226,7 +228,7 @@ bool astroBWTHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t 
 
     try {
         switch (ctx->algorithm.id()) {
-        case xmrig::Algorithm::ASTROBWT_DERO:
+        case xmrig_cuda::Algorithm::ASTROBWT_DERO:
             AstroBWT_Dero::hash(ctx, startNonce, target, rescount, resnonce);
             break;
 
@@ -268,7 +270,7 @@ bool kawPowHash(nvid_ctx *ctx, uint8_t* job_blob, uint64_t target, uint32_t *res
 
     try {
         switch (ctx->algorithm.id()) {
-        case xmrig::Algorithm::KAWPOW_RVN:
+        case xmrig_cuda::Algorithm::KAWPOW_RVN:
             KawPow_Raven::hash(ctx, job_blob, target, rescount, resnonce, skipped_hashes);
             break;
 
@@ -360,6 +362,8 @@ bool kawPowStopHash(nvid_ctx *ctx)
 
 bool setJob_v2(nvid_ctx *ctx, const void *data, size_t size, const char *algo)
 {
+    using namespace xmrig_cuda;
+
     if (ctx == nullptr) {
         return false;
     }
@@ -374,9 +378,9 @@ bool setJob_v2(nvid_ctx *ctx, const void *data, size_t size, const char *algo)
     }
 
     try {
-        const xmrig::Algorithm::Family f = xmrig::Algorithm::family(ctx->algorithm);
+        const auto f = Algorithm::family(ctx->algorithm);
 
-        if ((f == xmrig::Algorithm::RANDOM_X) || (f == xmrig::Algorithm::ASTROBWT)) {
+        if ((f == Algorithm::RANDOM_X) || (f == Algorithm::ASTROBWT)) {
             cuda_extra_cpu_set_data(ctx, data, size);
         }
         else {
@@ -395,6 +399,8 @@ bool setJob_v2(nvid_ctx *ctx, const void *data, size_t size, const char *algo)
 
 bool setJob(nvid_ctx *ctx, const void *data, size_t size, int32_t algo)
 {
+    using namespace xmrig_cuda;
+
     if (ctx == nullptr) {
         return false;
     }
@@ -403,9 +409,9 @@ bool setJob(nvid_ctx *ctx, const void *data, size_t size, int32_t algo)
     ctx->algorithm = algo;
 
     try {
-        const xmrig::Algorithm::Family f = xmrig::Algorithm::family(ctx->algorithm);
+        const auto f = Algorithm::family(ctx->algorithm);
 
-        if ((f == xmrig::Algorithm::RANDOM_X) || (f == xmrig::Algorithm::ASTROBWT)) {
+        if ((f == Algorithm::RANDOM_X) || (f == Algorithm::ASTROBWT)) {
             cuda_extra_cpu_set_data(ctx, data, size);
         }
         else {

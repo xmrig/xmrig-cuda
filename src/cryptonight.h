@@ -45,7 +45,7 @@ struct nvid_ctx {
     CUfunction kernel                   = nullptr;
 #   endif
 
-    xmrig::Algorithm algorithm          = xmrig::Algorithm::INVALID;
+    xmrig_cuda::Algorithm algorithm     = xmrig_cuda::Algorithm::INVALID;
     uint64_t kernel_height              = 0;
 
     int device_id                       = 0;
@@ -127,9 +127,9 @@ int cuda_get_driver_version();
 int cuda_get_deviceinfo(nvid_ctx *ctx);
 int cryptonight_gpu_init(nvid_ctx *ctx);
 void cryptonight_extra_cpu_set_data(nvid_ctx *ctx, const void *data, size_t len);
-void cryptonight_extra_cpu_prepare(nvid_ctx *ctx, uint32_t startNonce, const xmrig::Algorithm &algorithm);
-void cryptonight_gpu_hash(nvid_ctx *ctx, const xmrig::Algorithm &algorithm, uint64_t height, uint32_t startNonce);
-void cryptonight_extra_cpu_final(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce, const xmrig::Algorithm &algorithm);
+void cryptonight_extra_cpu_prepare(nvid_ctx *ctx, uint32_t startNonce, const xmrig_cuda::Algorithm &algorithm);
+void cryptonight_gpu_hash(nvid_ctx *ctx, const xmrig_cuda::Algorithm &algorithm, uint64_t height, uint32_t startNonce);
+void cryptonight_extra_cpu_final(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce, const xmrig_cuda::Algorithm &algorithm);
 
 void cuda_extra_cpu_set_data(nvid_ctx *ctx, const void *data, size_t len);
 void randomx_prepare(nvid_ctx *ctx, const void *dataset, size_t dataset_size, uint32_t batch_size);
