@@ -397,37 +397,6 @@ bool setJob_v2(nvid_ctx *ctx, const void *data, size_t size, const char *algo)
 }
 
 
-bool setJob(nvid_ctx *ctx, const void *data, size_t size, int32_t algo)
-{
-    using namespace xmrig_cuda;
-
-    if (ctx == nullptr) {
-        return false;
-    }
-
-    resetError(ctx->device_id);
-    ctx->algorithm = algo;
-
-    try {
-        const auto f = Algorithm::family(ctx->algorithm);
-
-        if ((f == Algorithm::RANDOM_X) || (f == Algorithm::ASTROBWT)) {
-            cuda_extra_cpu_set_data(ctx, data, size);
-        }
-        else {
-            cryptonight_extra_cpu_set_data(ctx, data, size);
-        }
-    }
-    catch (std::exception &ex) {
-        saveError(ctx->device_id, ex);
-
-        return false;
-    }
-
-    return true;
-}
-
-
 const char *deviceName(nvid_ctx *ctx)
 {
     return ctx->device_name;
@@ -445,17 +414,6 @@ const char *lastError(nvid_ctx *ctx)
 const char *pluginVersion()
 {
     return APP_VERSION;
-}
-
-
-int32_t deviceInfo(nvid_ctx *ctx, int32_t blocks, int32_t threads, int32_t algo, int32_t dataset_host)
-{
-    ctx->algorithm       = algo;
-    ctx->device_blocks   = blocks;
-    ctx->device_threads  = threads;
-    ctx->rx_dataset_host = dataset_host;
-
-    return cuda_get_deviceinfo(ctx);
 }
 
 

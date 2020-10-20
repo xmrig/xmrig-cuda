@@ -90,11 +90,9 @@ XMRIG_EXPORT bool kawPowPrepare(nvid_ctx *ctx, const void* cache, size_t cache_s
 XMRIG_EXPORT bool kawPowPrepare_v2(nvid_ctx *ctx, const void* cache, size_t cache_size, const void* dag_precalc, size_t dag_size, uint32_t height, const uint64_t* dag_sizes);
 XMRIG_EXPORT bool kawPowStopHash(nvid_ctx *ctx);
 XMRIG_EXPORT bool setJob_v2(nvid_ctx *ctx, const void *data, size_t size, const char *algo);
-XMRIG_EXPORT bool setJob(nvid_ctx *ctx, const void *data, size_t size, int32_t algo);
 XMRIG_EXPORT const char *deviceName(nvid_ctx *ctx);
 XMRIG_EXPORT const char *lastError(nvid_ctx *ctx);
 XMRIG_EXPORT const char *pluginVersion();
-XMRIG_EXPORT int32_t deviceInfo(nvid_ctx *ctx, int32_t blocks, int32_t threads, int32_t algo, int32_t dataset_host);
 XMRIG_EXPORT int32_t deviceInt(nvid_ctx *ctx, DeviceProperty property);
 XMRIG_EXPORT nvid_ctx *alloc(uint32_t id, int32_t bfactor, int32_t bsleep);
 XMRIG_EXPORT uint32_t deviceCount();

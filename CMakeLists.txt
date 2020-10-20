@@ -10,6 +10,7 @@ add_definitions(/DXMRIG_ALGO_CN_LITE /DXMRIG_ALGO_CN_HEAVY /DXMRIG_ALGO_CN_PICO)
 
 
 include(cmake/cpu.cmake)
+include(cmake/os.cmake)
 include(cmake/flags.cmake)
 include(cmake/CUDA.cmake)
 
@@ -28,6 +29,9 @@ if (WITH_DRIVER_API)
     list(APPEND SOURCES src/CudaCryptonightR_gen.cpp)
 endif()
 
+if (XMRIG_OS_WIN)
+    list(APPEND SOURCES res/app.rc)
+endif()
 
 add_library(${CMAKE_PROJECT_NAME} SHARED ${SOURCES})
 target_link_libraries(${CMAKE_PROJECT_NAME} xmrig-cu ${LIBS})
