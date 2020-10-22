@@ -74,8 +74,10 @@ static AlgoName const algorithm_names[] = {
     { "cn-pico/tlo",      Algorithm::CN_PICO_TLO     },
     { "cn/ccx",           Algorithm::CN_CCX          },
     { "astrobwt",         Algorithm::ASTROBWT_DERO   },
+    { "astrobwt/dero",    Algorithm::ASTROBWT_DERO   },
 #   ifdef XMRIG_DRIVER_API
     { "kawpow",           Algorithm::KAWPOW_RVN      },
+    { "kawpow/rvn",       Algorithm::KAWPOW_RVN      },
     { "cn/r",             Algorithm::CN_R            },
 #   endif
 };

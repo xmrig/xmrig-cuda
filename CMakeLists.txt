@@ -1,12 +1,65 @@
 cmake_minimum_required(VERSION 2.8)
 project(xmrig-cuda)
+include(cmake/CUDA-Version.cmake)
 
 
 option(WITH_DRIVER_API "Enable CUDA Driver API and NVRTC, required for cn/r and kawpow algorithms" ON)
 
+# Algorithm selection
+option(WITH_CN_R       "Enable CryptoNight-R algorithm" ON)
+option(WITH_CN_LITE    "Enable CryptoNight-Lite algorithms family" ON)
+option(WITH_CN_HEAVY   "Enable CryptoNight-Heavy algorithms family" ON)
+option(WITH_CN_PICO    "Enable CryptoNight-Pico algorithm" ON)
+option(WITH_ARGON2     "Enable Argon2 algorithms family" OFF) #unsupported
+if (CUDA_VERSION VERSION_LESS 9.0)
+    message(STATUS "CUDA ${CUDA_VERSION}: RandomX, AstroBWT, and KawPow disabled, they do not work with old CUDA")
+    option(WITH_RANDOMX  "Enable RandomX algorithms family" OFF)
+    option(WITH_ASTROBWT "Enable AstroBWT algorithms family" OFF)
+    option(WITH_KAWPOW   "Enable KawPow algorithms family" OFF)
+else()
+    option(WITH_RANDOMX  "Enable RandomX algorithms family" ON)
+    option(WITH_ASTROBWT "Enable AstroBWT algorithms family" ON)
+    option(WITH_KAWPOW   "Enable KawPow algorithms family" ON)
+endif()
+
+if (WITH_CN_R)
+    add_definitions(/DXMRIG_ALGO_CN_R)
+endif()
+
+if (WITH_CN_LITE)
+    add_definitions(/DXMRIG_ALGO_CN_LITE)
+endif()
+
+if (WITH_CN_HEAVY)
+    add_definitions(/DXMRIG_ALGO_CN_HEAVY)
+endif()
+
+if (WITH_CN_PICO)
+    add_definitions(/DXMRIG_ALGO_CN_PICO)
+endif()
+
+if (WITH_RANDOMX)
+    add_definitions(/DXMRIG_ALGO_RANDOMX)
+endif()
+
+if (WITH_ARGON2)
+    add_definitions(/DXMRIG_ALGO_ARGON2)
+endif()
+
+if (WITH_ASTROBWT)
+    add_definitions(/DXMRIG_ALGO_ASTROBWT)
+endif()
+
+if (WITH_KAWPOW)
+  if (WITH_DRIVER_API)
+    add_definitions(/DXMRIG_ALGO_KAWPOW)
+  else()
+    message(STATUS "CUDA ${CUDA_VERSION}: KawPow disabled, requires WITH_DRIVER_API=ON for CUDA Driver API and NVRTC")
+  endif()
+endif()
 
 include_directories(src)
-add_definitions(/DXMRIG_ALGO_CN_LITE /DXMRIG_ALGO_CN_HEAVY /DXMRIG_ALGO_CN_PICO)
+add_definitions(/DCUB_IGNORE_DEPRECATED_CPP_DIALECT)
 
 
 include(cmake/cpu.cmake)

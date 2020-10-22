@@ -152,8 +152,8 @@ public:
 #       endif
 #       ifdef XMRIG_ALGO_CN_HEAVY
         case Algorithm::CN_HEAVY_TUBE:
-            return Algorithm::CN_1;
 #       endif
+            return Algorithm::CN_1;
 
         case Algorithm::CN_2:
         case Algorithm::CN_R:

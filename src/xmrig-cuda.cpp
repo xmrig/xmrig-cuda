@@ -174,6 +174,7 @@ bool rxHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *resco
 
     try {
         switch (ctx->algorithm.id()) {
+#       ifdef XMRIG_ALGO_RANDOMX
         case Algorithm::RX_0:
         case Algorithm::RX_SFX:
             RandomX_Monero::hash(ctx, startNonce, target, rescount, resnonce, ctx->rx_batch_size);
@@ -190,6 +191,7 @@ bool rxHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *resco
         case Algorithm::RX_KEVA:
             RandomX_Keva::hash(ctx, startNonce, target, rescount, resnonce, ctx->rx_batch_size);
             break;
+#       endif
 
         default:
             throw std::runtime_error(kUnsupportedAlgorithm);
@@ -210,7 +212,11 @@ bool rxPrepare(nvid_ctx *ctx, const void *dataset, size_t datasetSize, bool, uin
     resetError(ctx->device_id);
 
     try {
+#       ifdef XMRIG_ALGO_RANDOMX
         randomx_prepare(ctx, ctx->rx_dataset_host > 0 ? datasetHost.reg(dataset, datasetSize) : dataset, datasetSize, batchSize);
+#       else
+        throw std::runtime_error(kUnsupportedAlgorithm);
+#       endif
     }
     catch (std::exception &ex) {
         saveError(ctx->device_id, ex);
@@ -224,13 +230,17 @@ bool rxPrepare(nvid_ctx *ctx, const void *dataset, size_t datasetSize, bool, uin
 
 bool astroBWTHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce)
 {
+    using namespace xmrig_cuda;
+
     resetError(ctx->device_id);
 
     try {
         switch (ctx->algorithm.id()) {
-        case xmrig_cuda::Algorithm::ASTROBWT_DERO:
+#       ifdef XMRIG_ALGO_ASTROBWT
+        case Algorithm::ASTROBWT_DERO:
             AstroBWT_Dero::hash(ctx, startNonce, target, rescount, resnonce);
             break;
+#       endif
 
         default:
             throw std::runtime_error(kUnsupportedAlgorithm);
@@ -251,7 +261,11 @@ bool astroBWTPrepare(nvid_ctx *ctx, uint32_t batchSize)
     resetError(ctx->device_id);
 
     try {
+#       ifdef XMRIG_ALGO_ASTROBWT
         astrobwt_prepare(ctx, batchSize);
+#       else
+        throw std::runtime_error(kUnsupportedAlgorithm);
+#       endif
     }
     catch (std::exception &ex) {
         saveError(ctx->device_id, ex);
@@ -265,14 +279,18 @@ bool astroBWTPrepare(nvid_ctx *ctx, uint32_t batchSize)
 
 bool kawPowHash(nvid_ctx *ctx, uint8_t* job_blob, uint64_t target, uint32_t *rescount, uint32_t *resnonce, uint32_t *skipped_hashes)
 {
+    using namespace xmrig_cuda;
+
 #   ifdef XMRIG_DRIVER_API
     resetError(ctx->device_id);
 
     try {
         switch (ctx->algorithm.id()) {
-        case xmrig_cuda::Algorithm::KAWPOW_RVN:
+#       ifdef XMRIG_ALGO_KAWPOW
+        case Algorithm::KAWPOW_RVN:
             KawPow_Raven::hash(ctx, job_blob, target, rescount, resnonce, skipped_hashes);
             break;
+#       endif
 
         default:
             throw std::runtime_error(kUnsupportedAlgorithm);
@@ -299,7 +317,11 @@ bool kawPowPrepare(nvid_ctx *ctx, const void* cache, size_t cache_size, size_t d
     resetError(ctx->device_id);
 
     try {
+#       ifdef XMRIG_ALGO_KAWPOW
         kawpow_prepare(ctx, cache, cache_size, nullptr, dag_size, height, dag_sizes);
+#       else
+        throw std::runtime_error(kUnsupportedAlgorithm);
+#       endif
     }
     catch (std::exception &ex) {
         saveError(ctx->device_id, ex);
@@ -322,7 +344,11 @@ bool kawPowPrepare_v2(nvid_ctx *ctx, const void* cache, size_t cache_size, const
     resetError(ctx->device_id);
 
     try {
+#       ifdef XMRIG_ALGO_KAWPOW
         kawpow_prepare(ctx, cache, cache_size, dag_precalc, dag_size, height, dag_sizes);
+#       else
+        throw std::runtime_error(kUnsupportedAlgorithm);
+#       endif
     }
     catch (std::exception &ex) {
         saveError(ctx->device_id, ex);
@@ -343,7 +369,11 @@ bool kawPowStopHash(nvid_ctx *ctx)
 {
 #   ifdef XMRIG_DRIVER_API
     try {
+#       ifdef XMRIG_ALGO_KAWPOW
         kawpow_stop_hash(ctx);
+#       else
+        throw std::runtime_error(kUnsupportedAlgorithm);
+#       endif
     }
     catch (std::exception &ex) {
         saveError(ctx->device_id, ex);
