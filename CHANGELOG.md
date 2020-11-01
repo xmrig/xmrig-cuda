@@ -1,3 +1,10 @@
+# v6.4.1
+- [#72](https://github.com/xmrig/xmrig-cuda/issues/72) Fixed broken KawPow on Linux.
+
+# v6.4.0
+- [#70](https://github.com/xmrig/xmrig-cuda/pull/70) RandomX: removed `rx/loki` algorithm.
+- Added CMake option `-DWITH_DRIVER_API=OFF` to disable CUDA Driver API and NVRTC, required for `cn/r` and `kawpow` algorithms.
+
 # v6.3.2
 - [#65](https://github.com/xmrig/xmrig-cuda/pull/65) Fixed broken AstroBWT.
 

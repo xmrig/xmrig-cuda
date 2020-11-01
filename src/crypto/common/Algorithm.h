@@ -60,11 +60,11 @@ public:
         CN_CCX,        // "cn/ccx"           Conceal (CCX)
         RX_0,          // "rx/0"             RandomX (reference configuration).
         RX_WOW,        // "rx/wow"           RandomWOW (Wownero).
-        RX_LOKI,       // "rx/loki"          RandomXL (Loki).
         RX_ARQ,        // "rx/arq"           RandomARQ (Arqma).
         RX_SFX,        // "rx/sfx"           RandomSFX (Safex Cash).
         RX_KEVA,       // "rx/keva"          RandomKV (Keva).
         AR2_CHUKWA,    // "argon2/chukwa"    Argon2id (Chukwa).
+        AR2_CHUKWA_V2, // "argon2/chukwav2"  Argon2id (Chukwa v2).
         AR2_WRKZ,      // "argon2/wrkz"      Argon2id (WRKZ)
         ASTROBWT_DERO, // "astrobwt"         AstroBWT (Dero)
         KAWPOW_RVN,    // "kawpow/rvn"       KawPow (RVN)
@@ -84,7 +84,7 @@ public:
     };
 
     inline Algorithm() = default;
-    inline Algorithm(const char *algo) : m_id(parse(algo))                                      {}
+    inline Algorithm(const char *algo) : m_id(parseName(algo))                                  {}
     inline Algorithm(Id id) : m_id(id)                                                          {}
     inline Algorithm(int id) : m_id(id > INVALID && id < MAX ? static_cast<Id>(id) : INVALID)   {}
 
@@ -100,13 +100,10 @@ public:
     inline bool operator==(const Algorithm &other) const  { return isEqual(other); }
     inline operator Algorithm::Id() const                 { return m_id; }
 
-    static Id parse(const char *name);
-
     size_t l2() const
     {
         switch (m_id) {
         case RX_0:
-        case RX_LOKI:
         case RX_SFX:
             return 0x40000;
 
@@ -154,7 +151,6 @@ public:
         if (f == RANDOM_X) {
             switch (m_id) {
             case RX_0:
-            case RX_LOKI:
             case RX_SFX:
                 return oneMiB * 2;
 
@@ -174,6 +170,9 @@ public:
             switch (m_id) {
             case AR2_CHUKWA:
                 return oneMiB / 2;
+
+            case AR2_CHUKWA_V2:
+                return oneMiB;
 
             case AR2_WRKZ:
                 return oneMiB / 4;
@@ -232,13 +231,13 @@ public:
 
         case RX_0:
         case RX_WOW:
-        case RX_LOKI:
         case RX_ARQ:
         case RX_SFX:
         case RX_KEVA:
             return RANDOM_X;
 
         case AR2_CHUKWA:
+        case AR2_CHUKWA_V2:
         case AR2_WRKZ:
             return ARGON2;
 
@@ -256,6 +255,8 @@ public:
     }
 
 private:
+    static Id parseName(const char *name);
+
     Id m_id = INVALID;
 };
 

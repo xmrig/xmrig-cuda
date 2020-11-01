@@ -29,15 +29,22 @@
 
 #include "crypto/common/Algorithm.h"
 
+
 #include <cstdint>
-#include <cuda.h>
+
+
+#ifdef XMRIG_DRIVER_API
+#   include <cuda.h>
+#endif
 
 
 struct nvid_ctx {
-    CUdevice cuDevice                   = 0;
-    CUcontext cuContext                 = nullptr;
+#   ifdef XMRIG_DRIVER_API
+    CUdevice cuDevice                   = -1;
     CUmodule module                     = nullptr;
     CUfunction kernel                   = nullptr;
+#   endif
+
     xmrig::Algorithm algorithm          = xmrig::Algorithm::INVALID;
     uint64_t kernel_height              = 0;
 
@@ -94,6 +101,7 @@ struct nvid_ctx {
     void* astrobwt_offsets_begin        = nullptr;
     void* astrobwt_offsets_end          = nullptr;
 
+#   ifdef XMRIG_DRIVER_API
     void* kawpow_cache                  = nullptr;
     size_t kawpow_cache_size            = 0;
     size_t kawpow_cache_capacity        = 0;
@@ -106,8 +114,10 @@ struct nvid_ctx {
     uint32_t* kawpow_stop_device        = nullptr;
 
     uint32_t kawpow_period              = 0;
+
     CUmodule kawpow_module              = nullptr;
     CUfunction kawpow_kernel            = nullptr;
+#   endif
 };
 
 
@@ -125,7 +135,6 @@ void cuda_extra_cpu_set_data(nvid_ctx *ctx, const void *data, size_t len);
 void randomx_prepare(nvid_ctx *ctx, const void *dataset, size_t dataset_size, uint32_t batch_size);
 
 namespace RandomX_Arqma   { void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce, uint32_t batch_size); }
-namespace RandomX_Loki    { void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce, uint32_t batch_size); }
 namespace RandomX_Monero  { void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce, uint32_t batch_size); }
 namespace RandomX_Wownero { void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce, uint32_t batch_size); }
 namespace RandomX_Keva    { void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce, uint32_t batch_size); }
@@ -134,7 +143,9 @@ void astrobwt_prepare(nvid_ctx *ctx, uint32_t batch_size);
 
 namespace AstroBWT_Dero   { void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce); }
 
+#ifdef XMRIG_DRIVER_API
 void kawpow_prepare(nvid_ctx *ctx, const void* cache, size_t cache_size, const void* dag_precalc, size_t dag_size, uint32_t height, const uint64_t* dag_sizes);
 void kawpow_stop_hash(nvid_ctx *ctx);
 
 namespace KawPow_Raven    { void hash(nvid_ctx *ctx, uint8_t* job_blob, uint64_t target, uint32_t *rescount, uint32_t *resnonce, uint32_t *skipped_hashes); }
+#endif
