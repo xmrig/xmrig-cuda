@@ -506,7 +506,7 @@ __global__ void cryptonight_core_gpu_phase2_quad(
     d[1] = (d_ctx_b + thread * 4)[sub];
 
     float conc_var;
-    if (ALGO == Algorithm::CN_CCX) {
+    if (ALGO == Algorithm::CN_CCX || ALGO == Algorithm::CN_CACHE_HASH) {
         conc_var = (partidx != 0) ? int_as_float(*(d_ctx_b + threads * 4 + thread * 4 + sub)) : 0.0f;
     }
 
@@ -544,7 +544,7 @@ __global__ void cryptonight_core_gpu_phase2_quad(
             } else {
                 uint32_t x_0 = loadGlobal32<uint32_t>(long_state + j);
 
-                if (ALGO == Algorithm::CN_CCX) {
+                if (ALGO == Algorithm::CN_CCX || ALGO == Algorithm::CN_CACHE_HASH) {
                     float r = int2float((int32_t)x_0) + conc_var;
                     r = int_as_float((float_as_int(r * r * r) & 0x807FFFFF) | 0x40000000);
                     x_0 ^= (int32_t)(int_as_float((float_as_int(conc_var) & 0x807FFFFF) | 0x40000000) * 536870880.0f);
@@ -637,7 +637,7 @@ __global__ void cryptonight_core_gpu_phase2_quad(
                 *(d_ctx_b + threads * 4 + thread) = idx0;
             }
         }
-        if (ALGO == Algorithm::CN_CCX) {
+        if (ALGO == Algorithm::CN_CCX || ALGO == Algorithm::CN_CACHE_HASH) {
             *(d_ctx_b + threads * 4 + thread * 4 + sub) = float_as_int(conc_var);
         }
     }
@@ -893,6 +893,10 @@ void cryptonight_gpu_hash(nvid_ctx *ctx, const xmrig::Algorithm &algorithm, uint
 
         case Algorithm::CN_CCX:
             cryptonight_core_gpu_hash<Algorithm::CN_CCX>(ctx, startNonce);
+            break;
+
+        case Algorithm::CN_CACHE_HASH:
+            cryptonight_core_gpu_hash<Algorithm::CN_CACHE_HASH>(ctx, startNonce);
             break;
 
         default:
