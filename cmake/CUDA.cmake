@@ -1,9 +1,9 @@
 set(MSG_CUDA_MAP "\n\n"
     "  Valid CUDA Toolkit Map:\n"
-    "   8.x for Fermi/Kepler/Maxwell/Pascal,\n"
-    "   9.x for       Kepler/Maxwell/Pascal/Volta,\n"
-    "  10.x for       Kepler/Maxwell/Pascal/Volta/Turing,\n"
-    "  11.x for              Maxwell/Pascal/Volta/Turing/Ampere\n\n"
+    "   8.x for Fermi/Kepler          /Maxwell/Pascal,\n"
+    "   9.x for       Kepler          /Maxwell/Pascal/Volta,\n"
+    "  10.x for       Kepler          /Maxwell/Pascal/Volta/Turing,\n"
+    "  11.x for       Kepler (in part)/Maxwell/Pascal/Volta/Turing/Ampere\n\n"
     "Reference https://developer.nvidia.com/cuda-gpus#compute for arch and family name\n\n"
 )
 
@@ -66,10 +66,10 @@ foreach(CUDA_ARCH_ELEM ${CUDA_ARCH})
     endif()
 
     if (NOT CUDA_VERSION VERSION_LESS 11.0)
-        if(${CUDA_ARCH_ELEM} LESS 50)
+        if(${CUDA_ARCH_ELEM} LESS 35)
             message("${MSG_CUDA_MAP}")
             message(FATAL_ERROR "Unsupported CUDA architecture '${CUDA_ARCH_ELEM}' specified. "
-                                "Use CUDA v10.x maximum, Kepler (30/35/37) was dropped at v11.")
+                                "Use CUDA v10.x maximum, Kepler (30) was dropped at v11.")
         endif()
     else()
         if(NOT ${CUDA_ARCH_ELEM} LESS 80)
