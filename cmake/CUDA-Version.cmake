@@ -18,10 +18,6 @@ if (WITH_DRIVER_API)
     find_library(CUDA_NVRTC_LIB libnvrtc nvrtc HINTS "${CUDA_TOOLKIT_ROOT_DIR}/lib64" "${LIBNVRTC_LIBRARY_DIR}" "${CUDA_TOOLKIT_ROOT_DIR}/lib/x64" /usr/lib64 /usr/local/cuda/lib64)
 
     set(LIBS ${LIBS} ${CUDA_LIBRARIES} ${CUDA_LIB} ${CUDA_NVRTC_LIB})
-
-    add_definitions(-DXMRIG_DRIVER_API)
 else()
     set(LIBS ${LIBS} ${CUDA_LIBRARIES})
-
-    remove_definitions(-DXMRIG_DRIVER_API)
 endif()

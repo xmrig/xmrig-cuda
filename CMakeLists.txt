@@ -11,6 +11,7 @@ option(WITH_CN_LITE    "Enable CryptoNight-Lite algorithms family" ON)
 option(WITH_CN_HEAVY   "Enable CryptoNight-Heavy algorithms family" ON)
 option(WITH_CN_PICO    "Enable CryptoNight-Pico algorithm" ON)
 option(WITH_ARGON2     "Enable Argon2 algorithms family" OFF) #unsupported
+
 if (CUDA_VERSION VERSION_LESS 9.0)
     message(STATUS "CUDA ${CUDA_VERSION}: RandomX, AstroBWT, and KawPow disabled, they do not work with old CUDA")
     option(WITH_RANDOMX  "Enable RandomX algorithms family" OFF)
@@ -20,10 +21,6 @@ else()
     option(WITH_RANDOMX  "Enable RandomX algorithms family" ON)
     option(WITH_ASTROBWT "Enable AstroBWT algorithms family" ON)
     option(WITH_KAWPOW   "Enable KawPow algorithms family" ON)
-endif()
-
-if (WITH_CN_R)
-    add_definitions(/DXMRIG_ALGO_CN_R)
 endif()
 
 if (WITH_CN_LITE)
@@ -51,12 +48,23 @@ if (WITH_ASTROBWT)
 endif()
 
 if (WITH_KAWPOW)
-  if (WITH_DRIVER_API)
-    add_definitions(/DXMRIG_ALGO_KAWPOW)
-  else()
-    message(STATUS "CUDA ${CUDA_VERSION}: KawPow disabled, requires WITH_DRIVER_API=ON for CUDA Driver API and NVRTC")
-  endif()
+    if (WITH_DRIVER_API)
+        add_definitions(/DXMRIG_ALGO_KAWPOW)
+    else()
+        set(WITH_KAWPOW OFF)
+        message(STATUS "CUDA ${CUDA_VERSION}: KawPow disabled, requires WITH_DRIVER_API=ON for CUDA Driver API and NVRTC")
+    endif()
 endif()
+
+if (WITH_CN_R)
+    if (WITH_DRIVER_API)
+        add_definitions(/DXMRIG_ALGO_CN_R)
+    else()
+        set(WITH_CN_R OFF)
+        message(STATUS "CUDA ${CUDA_VERSION}: CryptoNight-R disabled, requires WITH_DRIVER_API=ON for CUDA Driver API and NVRTC")
+    endif()
+endif()
+
 
 include_directories(src)
 add_definitions(/DCUB_IGNORE_DEPRECATED_CPP_DIALECT)
@@ -78,7 +86,7 @@ set(SOURCES
     )
 
 
-if (WITH_DRIVER_API)
+if (WITH_DRIVER_API AND WITH_CN_R)
     list(APPEND SOURCES src/CudaCryptonightR_gen.cpp)
 endif()
 

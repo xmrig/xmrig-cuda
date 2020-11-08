@@ -33,13 +33,13 @@
 #include <cstdint>
 
 
-#ifdef XMRIG_DRIVER_API
+#if defined(XMRIG_ALGO_KAWPOW) || defined(XMRIG_ALGO_CN_R)
 #   include <cuda.h>
 #endif
 
 
 struct nvid_ctx {
-#   ifdef XMRIG_DRIVER_API
+#   ifdef XMRIG_ALGO_CN_R
     CUdevice cuDevice                   = -1;
     CUmodule module                     = nullptr;
     CUfunction kernel                   = nullptr;
@@ -101,7 +101,7 @@ struct nvid_ctx {
     void* astrobwt_offsets_begin        = nullptr;
     void* astrobwt_offsets_end          = nullptr;
 
-#   ifdef XMRIG_DRIVER_API
+#   ifdef XMRIG_ALGO_KAWPOW
     void* kawpow_cache                  = nullptr;
     size_t kawpow_cache_size            = 0;
     size_t kawpow_cache_capacity        = 0;
@@ -143,7 +143,7 @@ void astrobwt_prepare(nvid_ctx *ctx, uint32_t batch_size);
 
 namespace AstroBWT_Dero   { void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce); }
 
-#ifdef XMRIG_DRIVER_API
+#ifdef XMRIG_ALGO_KAWPOW
 void kawpow_prepare(nvid_ctx *ctx, const void* cache, size_t cache_size, const void* dag_precalc, size_t dag_size, uint32_t height, const uint64_t* dag_sizes);
 void kawpow_stop_hash(nvid_ctx *ctx);
 

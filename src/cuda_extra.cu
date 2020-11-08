@@ -314,7 +314,7 @@ int cryptonight_extra_cpu_init(nvid_ctx *ctx, const xmrig_cuda::Algorithm &algor
 {
     using namespace xmrig_cuda;
 
-#   ifdef XMRIG_DRIVER_API
+#   ifdef XMRIG_ALGO_CN_R
     CU_CHECK(ctx->device_id, cuDeviceGet(&ctx->cuDevice, ctx->device_id));
 
     CUcontext cuContext;
