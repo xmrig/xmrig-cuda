@@ -748,7 +748,7 @@ void cryptonight_core_gpu_hash(nvid_ctx* ctx, uint32_t nonce)
     }
 
     for (int i = 0; i < partcount; i++) {
-#       ifdef XMRIG_DRIVER_API
+#       ifdef XMRIG_ALGO_CN_R
         if (ALGO == Algorithm::CN_R) {
             int threads = ctx->device_blocks * ctx->device_threads;
             void* args[] = { &threads, &ctx->device_bfactor, &i, &ctx->d_long_state, &ctx->d_ctx_a, &ctx->d_ctx_b, &ctx->d_ctx_state, &nonce, &ctx->d_input };
@@ -823,7 +823,7 @@ void cryptonight_gpu_hash(nvid_ctx *ctx, const xmrig_cuda::Algorithm &algorithm,
 
     if (algorithm.family() == Algorithm::CN) {
         if (algorithm == Algorithm::CN_R) {
-#           ifdef XMRIG_DRIVER_API
+#           ifdef XMRIG_ALGO_CN_R
             if ((ctx->algorithm != algorithm) || (ctx->kernel_height != height)) {
                 if (ctx->module) {
                     cuModuleUnload(ctx->module);
@@ -857,7 +857,7 @@ void cryptonight_gpu_hash(nvid_ctx *ctx, const xmrig_cuda::Algorithm &algorithm,
             cryptonight_core_gpu_hash<Algorithm::CN_2>(ctx, startNonce);
             break;
 
-#       ifdef XMRIG_DRIVER_API
+#       ifdef XMRIG_ALGO_CN_R
         case Algorithm::CN_R:
             cryptonight_core_gpu_hash<Algorithm::CN_R>(ctx, startNonce);
             break;

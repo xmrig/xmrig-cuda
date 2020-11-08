@@ -35,6 +35,9 @@
 #include <cuda_runtime_api.h>
 
 
+namespace xmrig_cuda {
+
+
 static std::mutex mutex;
 
 
@@ -74,21 +77,24 @@ public:
 
 static std::map<int, std::string> errors;
 static DatasetHost datasetHost;
-
 static const char *kUnsupportedAlgorithm = "Unsupported algorithm";
 
 
-static inline void saveError(int id, std::exception &ex)
+static inline bool saveError(int id, std::exception &ex)
 {
     std::lock_guard<std::mutex> lock(mutex);
     errors[id] = ex.what();
+
+    return false;
 }
 
 
-static inline void saveError(int id, const char *error)
+static inline bool saveError(int id, const char *error)
 {
     std::lock_guard<std::mutex> lock(mutex);
     errors[id] = error;
+
+    return false;
 }
 
 
@@ -99,11 +105,16 @@ static inline void resetError(int id)
 }
 
 
+} // namespace xmrig_cuda
+
+
 extern "C" {
 
 
 bool cnHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t height, uint64_t target, uint32_t *rescount, uint32_t *resnonce)
 {
+    using namespace xmrig_cuda;
+
     resetError(ctx->device_id);
 
     try {
@@ -112,9 +123,7 @@ bool cnHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t height, uint64_t target
         cryptonight_extra_cpu_final(ctx, startNonce, target, rescount, resnonce, ctx->algorithm);
     }
     catch (std::exception &ex) {
-        saveError(ctx->device_id, ex);
-
-        return false;
+        return saveError(ctx->device_id, ex);
     }
 
     return true;
@@ -129,9 +138,7 @@ bool deviceInfo_v2(nvid_ctx *ctx, int32_t blocks, int32_t threads, const char *a
         ctx->algorithm = algo;
 
         if (!ctx->algorithm.isValid()) {
-            saveError(ctx->device_id, kUnsupportedAlgorithm);
-
-            return false;
+            return saveError(ctx->device_id, kUnsupportedAlgorithm);
         }
     }
 
@@ -145,6 +152,8 @@ bool deviceInfo_v2(nvid_ctx *ctx, int32_t blocks, int32_t threads, const char *a
 
 bool deviceInit(nvid_ctx *ctx)
 {
+    using namespace xmrig_cuda;
+
     resetError(ctx->device_id);
 
     if (ctx == nullptr) {
@@ -157,9 +166,7 @@ bool deviceInit(nvid_ctx *ctx)
         rc = cryptonight_gpu_init(ctx);
     }
     catch (std::exception &ex) {
-        saveError(ctx->device_id, ex);
-
-        return false;
+        return saveError(ctx->device_id, ex);
     }
 
     return rc;
@@ -170,6 +177,7 @@ bool rxHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *resco
 {
     using namespace xmrig_cuda;
 
+#   ifdef XMRIG_ALGO_RANDOMX
     resetError(ctx->device_id);
 
     try {
@@ -196,39 +204,47 @@ bool rxHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *resco
         }
     }
     catch (std::exception &ex) {
-        saveError(ctx->device_id, ex);
-
-        return false;
+        return saveError(ctx->device_id, ex);
     }
 
     return true;
+#   else
+    return saveError(ctx->device_id, kUnsupportedAlgorithm);
+#   endif
 }
 
 
 bool rxPrepare(nvid_ctx *ctx, const void *dataset, size_t datasetSize, bool, uint32_t batchSize)
 {
+    using namespace xmrig_cuda;
+
+#   ifdef XMRIG_ALGO_RANDOMX
     resetError(ctx->device_id);
 
     try {
         randomx_prepare(ctx, ctx->rx_dataset_host > 0 ? datasetHost.reg(dataset, datasetSize) : dataset, datasetSize, batchSize);
     }
     catch (std::exception &ex) {
-        saveError(ctx->device_id, ex);
-
-        return false;
+        return saveError(ctx->device_id, ex);
     }
 
     return true;
+#   else
+    return saveError(ctx->device_id, kUnsupportedAlgorithm);
+#   endif
 }
 
 
 bool astroBWTHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce)
 {
+    using namespace xmrig_cuda;
+
+#   ifdef XMRIG_ALGO_ASTROBWT
     resetError(ctx->device_id);
 
     try {
         switch (ctx->algorithm.id()) {
-        case xmrig_cuda::Algorithm::ASTROBWT_DERO:
+        case Algorithm::ASTROBWT_DERO:
             AstroBWT_Dero::hash(ctx, startNonce, target, rescount, resnonce);
             break;
 
@@ -237,40 +253,47 @@ bool astroBWTHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t 
         }
     }
     catch (std::exception &ex) {
-        saveError(ctx->device_id, ex);
-
-        return false;
+        return saveError(ctx->device_id, ex);
     }
 
     return true;
+#   else
+    return saveError(ctx->device_id, kUnsupportedAlgorithm);
+#   endif
 }
 
 
 bool astroBWTPrepare(nvid_ctx *ctx, uint32_t batchSize)
 {
+    using namespace xmrig_cuda;
+
+#   ifdef XMRIG_ALGO_ASTROBWT
     resetError(ctx->device_id);
 
     try {
         astrobwt_prepare(ctx, batchSize);
     }
     catch (std::exception &ex) {
-        saveError(ctx->device_id, ex);
-
-        return false;
+        return saveError(ctx->device_id, ex);
     }
 
     return true;
+#   else
+    return saveError(ctx->device_id, kUnsupportedAlgorithm);
+#   endif
 }
 
 
 bool kawPowHash(nvid_ctx *ctx, uint8_t* job_blob, uint64_t target, uint32_t *rescount, uint32_t *resnonce, uint32_t *skipped_hashes)
 {
-#   ifdef XMRIG_DRIVER_API
+    using namespace xmrig_cuda;
+
+#   ifdef XMRIG_ALGO_KAWPOW
     resetError(ctx->device_id);
 
     try {
         switch (ctx->algorithm.id()) {
-        case xmrig_cuda::Algorithm::KAWPOW_RVN:
+        case Algorithm::KAWPOW_RVN:
             KawPow_Raven::hash(ctx, job_blob, target, rescount, resnonce, skipped_hashes);
             break;
 
@@ -279,83 +302,73 @@ bool kawPowHash(nvid_ctx *ctx, uint8_t* job_blob, uint64_t target, uint32_t *res
         }
     }
     catch (std::exception &ex) {
-        saveError(ctx->device_id, ex);
-
-        return false;
+        return saveError(ctx->device_id, ex);
     }
 
     return true;
 #   else
-    saveError(ctx->device_id, kUnsupportedAlgorithm);
-
-    return false;
+    return saveError(ctx->device_id, kUnsupportedAlgorithm);
 #   endif
 }
 
 
 bool kawPowPrepare(nvid_ctx *ctx, const void* cache, size_t cache_size, size_t dag_size, uint32_t height, const uint64_t* dag_sizes)
 {
-#   ifdef XMRIG_DRIVER_API
+    using namespace xmrig_cuda;
+
+#   ifdef XMRIG_ALGO_KAWPOW
     resetError(ctx->device_id);
 
     try {
         kawpow_prepare(ctx, cache, cache_size, nullptr, dag_size, height, dag_sizes);
     }
     catch (std::exception &ex) {
-        saveError(ctx->device_id, ex);
-
-        return false;
+        return saveError(ctx->device_id, ex);
     }
 
     return true;
 #   else
-    saveError(ctx->device_id, kUnsupportedAlgorithm);
-
-    return false;
+    return saveError(ctx->device_id, kUnsupportedAlgorithm);
 #   endif
 }
 
 
 bool kawPowPrepare_v2(nvid_ctx *ctx, const void* cache, size_t cache_size, const void* dag_precalc, size_t dag_size, uint32_t height, const uint64_t* dag_sizes)
 {
-#   ifdef XMRIG_DRIVER_API
+    using namespace xmrig_cuda;
+
+#   ifdef XMRIG_ALGO_KAWPOW
     resetError(ctx->device_id);
 
     try {
         kawpow_prepare(ctx, cache, cache_size, dag_precalc, dag_size, height, dag_sizes);
     }
     catch (std::exception &ex) {
-        saveError(ctx->device_id, ex);
-
-        return false;
+        return saveError(ctx->device_id, ex);
     }
 
     return true;
 #   else
-    saveError(ctx->device_id, kUnsupportedAlgorithm);
-
-    return false;
+    return saveError(ctx->device_id, kUnsupportedAlgorithm);
 #   endif
 }
 
 
 bool kawPowStopHash(nvid_ctx *ctx)
 {
-#   ifdef XMRIG_DRIVER_API
+    using namespace xmrig_cuda;
+
+#   ifdef XMRIG_ALGO_KAWPOW
     try {
         kawpow_stop_hash(ctx);
     }
     catch (std::exception &ex) {
-        saveError(ctx->device_id, ex);
-
-        return false;
+        return saveError(ctx->device_id, ex);
     }
 
     return true;
 #   else
-    saveError(ctx->device_id, kUnsupportedAlgorithm);
-
-    return false;
+    return saveError(ctx->device_id, kUnsupportedAlgorithm);
 #   endif
 }
 
@@ -372,9 +385,7 @@ bool setJob_v2(nvid_ctx *ctx, const void *data, size_t size, const char *algo)
     ctx->algorithm = algo;
 
     if (!ctx->algorithm.isValid()) {
-        saveError(ctx->device_id, kUnsupportedAlgorithm);
-
-        return false;
+        return saveError(ctx->device_id, kUnsupportedAlgorithm);
     }
 
     try {
@@ -388,9 +399,7 @@ bool setJob_v2(nvid_ctx *ctx, const void *data, size_t size, const char *algo)
         }
     }
     catch (std::exception &ex) {
-        saveError(ctx->device_id, ex);
-
-        return false;
+        return saveError(ctx->device_id, ex);
     }
 
     return true;
@@ -405,6 +414,8 @@ const char *deviceName(nvid_ctx *ctx)
 
 const char *lastError(nvid_ctx *ctx)
 {
+    using namespace xmrig_cuda;
+
     std::lock_guard<std::mutex> lock(mutex);
 
     return errors.count(ctx->device_id) ? errors[ctx->device_id].c_str() : nullptr;
@@ -544,7 +555,7 @@ uint64_t deviceUlong(nvid_ctx *ctx, DeviceProperty property)
 
 void init()
 {
-#   ifdef XMRIG_DRIVER_API
+#   if defined(XMRIG_ALGO_KAWPOW) || defined(XMRIG_ALGO_CN_R)
     cuInit(0);
 #   endif
 }
@@ -552,6 +563,8 @@ void init()
 
 void release(nvid_ctx *ctx)
 {
+    using namespace xmrig_cuda;
+
     if (ctx == nullptr) {
         return;
     }
@@ -594,7 +607,7 @@ void release(nvid_ctx *ctx)
     cudaFree(ctx->astrobwt_offsets_begin);
     cudaFree(ctx->astrobwt_offsets_end);
 
-#   ifdef XMRIG_DRIVER_API
+#   ifdef WITH_KAWPOW
     cudaFree(ctx->kawpow_cache);
     cudaFree(ctx->kawpow_dag);
     cudaFreeHost(ctx->kawpow_stop_host);
