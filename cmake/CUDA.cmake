@@ -114,6 +114,13 @@ endif()
 option(CUDA_SHOW_REGISTER "Show registers used for each kernel and compute architecture" OFF)
 option(CUDA_KEEP_FILES "Keep all intermediate files that are generated during internal compilation steps" OFF)
 
+if (WITH_DRIVER_API)
+    find_library(CUDA_LIB libcuda cuda HINTS "${CUDA_TOOLKIT_ROOT_DIR}/lib64" "${LIBCUDA_LIBRARY_DIR}" "${CUDA_TOOLKIT_ROOT_DIR}/lib/x64" /usr/lib64 /usr/local/cuda/lib64)
+    find_library(CUDA_NVRTC_LIB libnvrtc nvrtc HINTS "${CUDA_TOOLKIT_ROOT_DIR}/lib64" "${LIBNVRTC_LIBRARY_DIR}" "${CUDA_TOOLKIT_ROOT_DIR}/lib/x64" /usr/lib64 /usr/local/cuda/lib64)
+
+    list(APPEND LIBS ${CUDA_LIB} ${CUDA_NVRTC_LIB})
+endif()
+
 if("${CUDA_COMPILER}" STREQUAL "clang")
     set(LIBS ${LIBS} cudart_static)
     set(CLANG_BUILD_FLAGS "-O3 -x cuda --cuda-path=${CUDA_TOOLKIT_ROOT_DIR}")
