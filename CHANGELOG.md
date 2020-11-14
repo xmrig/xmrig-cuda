@@ -1,3 +1,8 @@
+# v6.5.0
+- [#74](https://github.com/xmrig/xmrig-cuda/pull/74) Fixed CUDA 8.0 support, RandomX, AstroBWT, and KawPow disabled for this CUDA version.
+- [#76](https://github.com/xmrig/xmrig-cuda/pull/76) Fixed high CPU usage on Cryptonight and AstroBWT.
+- Removed legacy API and added version information on Windows.
+
 # v6.4.1
 - [#72](https://github.com/xmrig/xmrig-cuda/issues/72) Fixed broken KawPow on Linux.
 
