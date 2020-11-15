@@ -120,7 +120,7 @@ __device__ __forceinline__ void mix_and_propagate( uint32_t* state )
 }
 
 
-template<xmrig::Algorithm::Id ALGO>
+template<xmrig_cuda::Algorithm::Id ALGO>
 __global__ void cryptonight_extra_gpu_prepare(
         int threads,
         uint32_t *__restrict__ d_input,
@@ -134,7 +134,7 @@ __global__ void cryptonight_extra_gpu_prepare(
         uint32_t *__restrict__ d_ctx_key2
         )
 {
-    using namespace xmrig;
+    using namespace xmrig_cuda;
 
     int thread = (blockDim.x * blockIdx.x + threadIdx.x);
     __shared__ uint32_t sharedMemory[1024];
@@ -211,10 +211,10 @@ __global__ void cryptonight_extra_gpu_prepare(
 }
 
 
-template<xmrig::Algorithm::Id ALGO>
+template<xmrig_cuda::Algorithm::Id ALGO>
 __global__ void cryptonight_extra_gpu_final( int threads, uint64_t target, uint32_t* __restrict__ d_res_count, uint32_t * __restrict__ d_res_nonce, uint32_t * __restrict__ d_ctx_state,uint32_t * __restrict__ d_ctx_key2 )
 {
-    using namespace xmrig;
+    using namespace xmrig_cuda;
 
     const int thread = blockDim.x * blockIdx.x + threadIdx.x;
 
@@ -310,11 +310,11 @@ void cuda_extra_cpu_set_data(nvid_ctx *ctx, const void *data, size_t len)
 }
 
 
-int cryptonight_extra_cpu_init(nvid_ctx *ctx, const xmrig::Algorithm &algorithm, size_t hashMemSize)
+int cryptonight_extra_cpu_init(nvid_ctx *ctx, const xmrig_cuda::Algorithm &algorithm, size_t hashMemSize)
 {
-    using namespace xmrig;
+    using namespace xmrig_cuda;
 
-#   ifdef XMRIG_DRIVER_API
+#   ifdef XMRIG_ALGO_CN_R
     CU_CHECK(ctx->device_id, cuDeviceGet(&ctx->cuDevice, ctx->device_id));
 
     CUcontext cuContext;
@@ -389,9 +389,9 @@ int cryptonight_extra_cpu_init(nvid_ctx *ctx, const xmrig::Algorithm &algorithm,
 }
 
 
-void cryptonight_extra_cpu_prepare(nvid_ctx *ctx, uint32_t startNonce, const xmrig::Algorithm &algorithm)
+void cryptonight_extra_cpu_prepare(nvid_ctx *ctx, uint32_t startNonce, const xmrig_cuda::Algorithm &algorithm)
 {
-    using namespace xmrig;
+    using namespace xmrig_cuda;
 
     int threadsperblock = 128;
     uint32_t wsize = ctx->device_blocks * ctx->device_threads;
@@ -417,9 +417,9 @@ void cryptonight_extra_cpu_prepare(nvid_ctx *ctx, uint32_t startNonce, const xmr
     }
 }
 
-void cryptonight_extra_cpu_final(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce, const xmrig::Algorithm &algorithm)
+void cryptonight_extra_cpu_final(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce, const xmrig_cuda::Algorithm &algorithm)
 {
-    using namespace xmrig;
+    using namespace xmrig_cuda;
 
     int threadsperblock = 128;
     uint32_t wsize = ctx->device_blocks * ctx->device_threads;
@@ -436,6 +436,8 @@ void cryptonight_extra_cpu_final(nvid_ctx *ctx, uint32_t startNonce, uint64_t ta
         // fallback for all other algorithms
         CUDA_CHECK_KERNEL(ctx->device_id, cryptonight_extra_gpu_final<Algorithm::CN_0> << <grid, block >> > (wsize, target, ctx->d_result_count, ctx->d_result_nonce, ctx->d_ctx_state, ctx->d_ctx_key2));
     }
+
+    CUDA_CHECK(ctx->device_id, cudaDeviceSynchronize());
 
     CUDA_CHECK(ctx->device_id, cudaMemcpy(rescount, ctx->d_result_count, sizeof(uint32_t), cudaMemcpyDeviceToHost));
     CUDA_CHECK(ctx->device_id, cudaMemcpy(resnonce, ctx->d_result_nonce, 16 * sizeof(uint32_t), cudaMemcpyDeviceToHost));
@@ -494,7 +496,7 @@ int cuda_get_driver_version()
  */
 int cuda_get_deviceinfo(nvid_ctx *ctx)
 {
-    using namespace xmrig;
+    using namespace xmrig_cuda;
 
     const int version = cuda_get_driver_version();
     if (!version) {
@@ -684,5 +686,5 @@ int cuda_get_deviceinfo(nvid_ctx *ctx)
 
 int cryptonight_gpu_init(nvid_ctx *ctx)
 {
-    return cryptonight_extra_cpu_init(ctx, ctx->algorithm, xmrig::CnAlgo<>::memory(ctx->algorithm));
+    return cryptonight_extra_cpu_init(ctx, ctx->algorithm, xmrig_cuda::CnAlgo<>::memory(ctx->algorithm));
 }

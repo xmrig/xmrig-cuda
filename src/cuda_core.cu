@@ -268,7 +268,7 @@ struct u64 : public uint2
 
 /** cryptonight with two threads per hash
  */
-template<size_t ITERATIONS, uint32_t MEM, uint32_t MASK, xmrig::Algorithm::Id ALGO>
+template<size_t ITERATIONS, uint32_t MEM, uint32_t MASK, xmrig_cuda::Algorithm::Id ALGO>
 #ifdef XMRIG_THREADS
 __launch_bounds__( XMRIG_THREADS * 2 )
 #endif
@@ -284,7 +284,7 @@ __global__ void cryptonight_core_gpu_phase2_double(
         uint32_t * __restrict__ d_input
         )
 {
-    using namespace xmrig;
+    using namespace xmrig_cuda;
 
     __shared__ uint32_t sharedMemory[1024];
 
@@ -437,7 +437,7 @@ __global__ void cryptonight_core_gpu_phase2_double(
 }
 
 
-template<size_t ITERATIONS, uint32_t MEM, uint32_t MASK, xmrig::Algorithm::Id ALGO, xmrig::Algorithm::Id BASE>
+template<size_t ITERATIONS, uint32_t MEM, uint32_t MASK, xmrig_cuda::Algorithm::Id ALGO, xmrig_cuda::Algorithm::Id BASE>
 #ifdef XMRIG_THREADS
 __launch_bounds__( XMRIG_THREADS * 4 )
 #endif
@@ -453,7 +453,7 @@ __global__ void cryptonight_core_gpu_phase2_quad(
         uint32_t *__restrict__ d_input
         )
 {
-    using namespace xmrig;
+    using namespace xmrig_cuda;
 
     __shared__ uint32_t sharedMemory[1024];
 
@@ -643,10 +643,10 @@ __global__ void cryptonight_core_gpu_phase2_quad(
     }
 }
 
-template<size_t ITERATIONS, uint32_t MEM, xmrig::Algorithm::Id ALGO>
+template<size_t ITERATIONS, uint32_t MEM, xmrig_cuda::Algorithm::Id ALGO>
 __global__ void cryptonight_core_gpu_phase3( int threads, int bfactor, int partidx, const uint32_t * __restrict__ long_state, uint32_t * __restrict__ d_ctx_state, uint32_t * __restrict__ d_ctx_key2 )
 {
-    using namespace xmrig;
+    using namespace xmrig_cuda;
 
     __shared__ uint32_t sharedMemory[1024];
 
@@ -696,10 +696,10 @@ __global__ void cryptonight_core_gpu_phase3( int threads, int bfactor, int parti
     MEMCPY8( d_ctx_state + thread * 50 + sub + 16, text, 2 );
 }
 
-template<xmrig::Algorithm::Id ALGO>
+template<xmrig_cuda::Algorithm::Id ALGO>
 void cryptonight_core_gpu_hash(nvid_ctx* ctx, uint32_t nonce)
 {
-    using namespace xmrig;
+    using namespace xmrig_cuda;
     constexpr CnAlgo<ALGO> props;
 
     constexpr size_t MASK         = props.mask();
@@ -748,7 +748,7 @@ void cryptonight_core_gpu_hash(nvid_ctx* ctx, uint32_t nonce)
     }
 
     for (int i = 0; i < partcount; i++) {
-#       ifdef XMRIG_DRIVER_API
+#       ifdef XMRIG_ALGO_CN_R
         if (ALGO == Algorithm::CN_R) {
             int threads = ctx->device_blocks * ctx->device_threads;
             void* args[] = { &threads, &ctx->device_bfactor, &i, &ctx->d_long_state, &ctx->d_ctx_a, &ctx->d_ctx_b, &ctx->d_ctx_state, &nonce, &ctx->d_input };
@@ -817,13 +817,13 @@ void cryptonight_core_gpu_hash(nvid_ctx* ctx, uint32_t nonce)
 }
 
 
-void cryptonight_gpu_hash(nvid_ctx *ctx, const xmrig::Algorithm &algorithm, uint64_t height, uint32_t startNonce)
+void cryptonight_gpu_hash(nvid_ctx *ctx, const xmrig_cuda::Algorithm &algorithm, uint64_t height, uint32_t startNonce)
 {
-    using namespace xmrig;
+    using namespace xmrig_cuda;
 
     if (algorithm.family() == Algorithm::CN) {
         if (algorithm == Algorithm::CN_R) {
-#           ifdef XMRIG_DRIVER_API
+#           ifdef XMRIG_ALGO_CN_R
             if ((ctx->algorithm != algorithm) || (ctx->kernel_height != height)) {
                 if (ctx->module) {
                     cuModuleUnload(ctx->module);
@@ -857,7 +857,7 @@ void cryptonight_gpu_hash(nvid_ctx *ctx, const xmrig::Algorithm &algorithm, uint
             cryptonight_core_gpu_hash<Algorithm::CN_2>(ctx, startNonce);
             break;
 
-#       ifdef XMRIG_DRIVER_API
+#       ifdef XMRIG_ALGO_CN_R
         case Algorithm::CN_R:
             cryptonight_core_gpu_hash<Algorithm::CN_R>(ctx, startNonce);
             break;

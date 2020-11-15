@@ -33,19 +33,19 @@
 #include <cstdint>
 
 
-#ifdef XMRIG_DRIVER_API
+#if defined(XMRIG_ALGO_KAWPOW) || defined(XMRIG_ALGO_CN_R)
 #   include <cuda.h>
 #endif
 
 
 struct nvid_ctx {
-#   ifdef XMRIG_DRIVER_API
+#   ifdef XMRIG_ALGO_CN_R
     CUdevice cuDevice                   = -1;
     CUmodule module                     = nullptr;
     CUfunction kernel                   = nullptr;
 #   endif
 
-    xmrig::Algorithm algorithm          = xmrig::Algorithm::INVALID;
+    xmrig_cuda::Algorithm algorithm     = xmrig_cuda::Algorithm::INVALID;
     uint64_t kernel_height              = 0;
 
     int device_id                       = 0;
@@ -101,7 +101,7 @@ struct nvid_ctx {
     void* astrobwt_offsets_begin        = nullptr;
     void* astrobwt_offsets_end          = nullptr;
 
-#   ifdef XMRIG_DRIVER_API
+#   ifdef XMRIG_ALGO_KAWPOW
     void* kawpow_cache                  = nullptr;
     size_t kawpow_cache_size            = 0;
     size_t kawpow_cache_capacity        = 0;
@@ -127,9 +127,9 @@ int cuda_get_driver_version();
 int cuda_get_deviceinfo(nvid_ctx *ctx);
 int cryptonight_gpu_init(nvid_ctx *ctx);
 void cryptonight_extra_cpu_set_data(nvid_ctx *ctx, const void *data, size_t len);
-void cryptonight_extra_cpu_prepare(nvid_ctx *ctx, uint32_t startNonce, const xmrig::Algorithm &algorithm);
-void cryptonight_gpu_hash(nvid_ctx *ctx, const xmrig::Algorithm &algorithm, uint64_t height, uint32_t startNonce);
-void cryptonight_extra_cpu_final(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce, const xmrig::Algorithm &algorithm);
+void cryptonight_extra_cpu_prepare(nvid_ctx *ctx, uint32_t startNonce, const xmrig_cuda::Algorithm &algorithm);
+void cryptonight_gpu_hash(nvid_ctx *ctx, const xmrig_cuda::Algorithm &algorithm, uint64_t height, uint32_t startNonce);
+void cryptonight_extra_cpu_final(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce, const xmrig_cuda::Algorithm &algorithm);
 
 void cuda_extra_cpu_set_data(nvid_ctx *ctx, const void *data, size_t len);
 void randomx_prepare(nvid_ctx *ctx, const void *dataset, size_t dataset_size, uint32_t batch_size);
@@ -143,7 +143,7 @@ void astrobwt_prepare(nvid_ctx *ctx, uint32_t batch_size);
 
 namespace AstroBWT_Dero   { void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce); }
 
-#ifdef XMRIG_DRIVER_API
+#ifdef XMRIG_ALGO_KAWPOW
 void kawpow_prepare(nvid_ctx *ctx, const void* cache, size_t cache_size, const void* dag_precalc, size_t dag_size, uint32_t height, const uint64_t* dag_sizes);
 void kawpow_stop_hash(nvid_ctx *ctx);
 

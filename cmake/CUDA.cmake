@@ -1,36 +1,17 @@
+set(MSG_CUDA_MAP "\n\n"
+    "  Valid CUDA Toolkit Map:\n"
+    "   8.x for Fermi/Kepler          /Maxwell/Pascal,\n"
+    "   9.x for       Kepler          /Maxwell/Pascal/Volta,\n"
+    "  10.x for       Kepler          /Maxwell/Pascal/Volta/Turing,\n"
+    "  11.x for       Kepler (in part)/Maxwell/Pascal/Volta/Turing/Ampere\n\n"
+    "Reference https://developer.nvidia.com/cuda-gpus#compute for arch and family name\n\n"
+)
+
 add_definitions(-DCUB_IGNORE_DEPRECATED_CPP_DIALECT -DTHRUST_IGNORE_DEPRECATED_CPP_DIALECT)
 
 option(XMRIG_LARGEGRID "Support large CUDA block count > 128" ON)
 if (XMRIG_LARGEGRID)
     add_definitions("-DXMRIG_LARGEGRID=${XMRIG_LARGEGRID}")
-endif()
-
-set(DEVICE_COMPILER "nvcc")
-set(CUDA_COMPILER "${DEVICE_COMPILER}" CACHE STRING "Select the device compiler")
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    list(APPEND DEVICE_COMPILER "clang")
-endif()
-
-set_property(CACHE CUDA_COMPILER PROPERTY STRINGS "${DEVICE_COMPILER}")
-
-list(APPEND CMAKE_PREFIX_PATH "$ENV{CUDA_ROOT}")
-list(APPEND CMAKE_PREFIX_PATH "$ENV{CMAKE_PREFIX_PATH}")
-
-set(CUDA_STATIC ON)
-find_package(CUDA 9.0 REQUIRED)
-
-if (WITH_DRIVER_API)
-    find_library(CUDA_LIB libcuda cuda HINTS "${CUDA_TOOLKIT_ROOT_DIR}/lib64" "${LIBCUDA_LIBRARY_DIR}" "${CUDA_TOOLKIT_ROOT_DIR}/lib/x64" /usr/lib64 /usr/local/cuda/lib64)
-    find_library(CUDA_NVRTC_LIB libnvrtc nvrtc HINTS "${CUDA_TOOLKIT_ROOT_DIR}/lib64" "${LIBNVRTC_LIBRARY_DIR}" "${CUDA_TOOLKIT_ROOT_DIR}/lib/x64" /usr/lib64 /usr/local/cuda/lib64)
-
-    set(LIBS ${LIBS} ${CUDA_LIBRARIES} ${CUDA_LIB} ${CUDA_NVRTC_LIB})
-
-    add_definitions(-DXMRIG_DRIVER_API)
-else()
-    set(LIBS ${LIBS} ${CUDA_LIBRARIES})
-
-    remove_definitions(-DXMRIG_DRIVER_API)
 endif()
 
 set(DEFAULT_CUDA_ARCH "50")
@@ -40,6 +21,7 @@ if (CUDA_VERSION VERSION_LESS 9.0)
     list(APPEND DEFAULT_CUDA_ARCH "20;21")
 endif()
 
+# Kepler GPUs are only supported with CUDA < 11.0
 if (CUDA_VERSION VERSION_LESS 11.0)
     list(APPEND DEFAULT_CUDA_ARCH "30")
 else()
@@ -56,6 +38,17 @@ if (NOT CUDA_VERSION VERSION_LESS 9.0)
     list(APPEND DEFAULT_CUDA_ARCH "70")
 endif()
 
+# add Turing support for CUDA >= 10.0
+if (NOT CUDA_VERSION VERSION_LESS 10.0)
+    list(APPEND DEFAULT_CUDA_ARCH "75")
+endif()
+
+# add Ampere support for CUDA >= 11.0
+if (NOT CUDA_VERSION VERSION_LESS 11.0)
+    list(APPEND DEFAULT_CUDA_ARCH "80")
+endif()
+list(SORT DEFAULT_CUDA_ARCH)
+
 set(CUDA_ARCH "${DEFAULT_CUDA_ARCH}" CACHE STRING "Set GPU architecture (semicolon separated list, e.g. '-DCUDA_ARCH=20;35;60')")
 
 # validate architectures (only numbers are allowed)
@@ -68,15 +61,65 @@ foreach(CUDA_ARCH_ELEM ${CUDA_ARCH})
     unset(IS_NUMBER)
 
     if(${CUDA_ARCH_ELEM} LESS 20)
-        message(FATAL_ERROR "Unsupported CUDA architecture '${CUDA_ARCH_ELEM}' specified. "
-                            "Use '20' (for compute architecture 2.0) or higher.")
+        message("${MSG_CUDA_MAP}")
+        message(FATAL_ERROR "Unsupported CUDA architecture '${CUDA_ARCH_ELEM}' specified.")
+    endif()
+
+    if (NOT CUDA_VERSION VERSION_LESS 11.0)
+        if(${CUDA_ARCH_ELEM} LESS 35)
+            message("${MSG_CUDA_MAP}")
+            message(FATAL_ERROR "Unsupported CUDA architecture '${CUDA_ARCH_ELEM}' specified. "
+                                "Use CUDA v10.x maximum, Kepler (30) was dropped at v11.")
+        endif()
+    else()
+        if(NOT ${CUDA_ARCH_ELEM} LESS 80)
+            message("${MSG_CUDA_MAP}")
+            message(FATAL_ERROR "Unsupported CUDA architecture '${CUDA_ARCH_ELEM}' specified. "
+                                "Use CUDA v11.x minimum, Ampere (80) was added at v11.")
+        endif()
+    endif()
+
+    if (CUDA_VERSION VERSION_LESS 10.0)
+        if(NOT ${CUDA_ARCH_ELEM} LESS 75)
+            message("${MSG_CUDA_MAP}")
+            message(FATAL_ERROR "Unsupported CUDA architecture '${CUDA_ARCH_ELEM}' specified. "
+                                "Use CUDA v10.x minimum, Turing (75) was added at v10.")
+        endif()
+    endif()
+
+    if (NOT CUDA_VERSION VERSION_LESS 9.0)
+        if(${CUDA_ARCH_ELEM} LESS 30)
+            message("${MSG_CUDA_MAP}")
+            message(FATAL_ERROR "Unsupported CUDA architecture '${CUDA_ARCH_ELEM}' specified. "
+                                "Use CUDA v8.x maximum, Fermi (20/21) was dropped at v9.")
+        endif()
+    else()
+        if(NOT ${CUDA_ARCH_ELEM} LESS 70)
+            message("${MSG_CUDA_MAP}")
+            message(FATAL_ERROR "Unsupported CUDA architecture '${CUDA_ARCH_ELEM}' specified. "
+                                "Use CUDA v9.x minimum, Volta (70/72) was added at v9.")
+        endif()
     endif()
 endforeach()
 
+unset(MSG_CUDA_MAP)
 list(SORT CUDA_ARCH)
 
+add_definitions(-DCUB_IGNORE_DEPRECATED_CPP_DIALECT -DTHRUST_IGNORE_DEPRECATED_CPP_DIALECT)
+
+option(XMRIG_LARGEGRID "Support large CUDA block count > 128" ON)
+if (XMRIG_LARGEGRID)
+    add_definitions("-DXMRIG_LARGEGRID=${XMRIG_LARGEGRID}")
+endif()
 option(CUDA_SHOW_REGISTER "Show registers used for each kernel and compute architecture" OFF)
 option(CUDA_KEEP_FILES "Keep all intermediate files that are generated during internal compilation steps" OFF)
+
+if (WITH_DRIVER_API)
+    find_library(CUDA_LIB libcuda cuda HINTS "${CUDA_TOOLKIT_ROOT_DIR}/lib64" "${LIBCUDA_LIBRARY_DIR}" "${CUDA_TOOLKIT_ROOT_DIR}/lib/x64" /usr/lib64 /usr/local/cuda/lib64)
+    find_library(CUDA_NVRTC_LIB libnvrtc nvrtc HINTS "${CUDA_TOOLKIT_ROOT_DIR}/lib64" "${LIBNVRTC_LIBRARY_DIR}" "${CUDA_TOOLKIT_ROOT_DIR}/lib/x64" /usr/lib64 /usr/local/cuda/lib64)
+
+    list(APPEND LIBS ${CUDA_LIB} ${CUDA_NVRTC_LIB})
+endif()
 
 if("${CUDA_COMPILER}" STREQUAL "clang")
     set(LIBS ${LIBS} cudart_static)
@@ -141,6 +184,48 @@ else()
     message(FATAL_ERROR "selected CUDA compiler '${CUDA_COMPILER}' is not supported")
 endif()
 
+if (WITH_RANDOMX)
+    set(CUDA_RANDOMX_SOURCES
+        src/RandomX/aes_cuda.hpp
+        src/RandomX/arqma/configuration.h
+        src/RandomX/arqma/randomx_arqma.cu
+        src/RandomX/blake2b_cuda.hpp
+        src/RandomX/common.hpp
+        src/RandomX/hash.hpp
+        src/RandomX/keva/configuration.h
+        src/RandomX/keva/randomx_keva.cu
+        src/RandomX/monero/configuration.h
+        src/RandomX/monero/randomx_monero.cu
+        src/RandomX/randomx_cuda.hpp
+        src/RandomX/randomx.cu
+        src/RandomX/wownero/configuration.h
+        src/RandomX/wownero/randomx_wownero.cu
+    )
+else()
+    set(CUDA_RANDOMX_SOURCES "")
+endif()
+
+if (WITH_ASTROBWT)
+    set(CUDA_ASTROBWT_SOURCES
+        src/AstroBWT/dero/AstroBWT.cu
+        src/AstroBWT/dero/BWT.h
+        src/AstroBWT/dero/salsa20.h
+        src/AstroBWT/dero/sha3.h
+    )
+else()
+    set(CUDA_ASTROBWT_SOURCES "")
+endif()
+
+if (WITH_KAWPOW AND WITH_DRIVER_API)
+    set(CUDA_KAWPOW_SOURCES
+        src/KawPow/raven/CudaKawPow_gen.cpp
+        src/KawPow/raven/CudaKawPow_gen.h
+        src/KawPow/raven/KawPow.cu
+    )
+else()
+    set(CUDA_KAWPOW_SOURCES "")
+endif()
+
 set(CUDA_SOURCES
     src/cryptonight.h
     src/cuda_aes.hpp
@@ -154,39 +239,10 @@ set(CUDA_SOURCES
     src/cuda_jh.hpp
     src/cuda_keccak.hpp
     src/cuda_skein.hpp
+    ${CUDA_RANDOMX_SOURCES}
+    ${CUDA_ASTROBWT_SOURCES}
+    ${CUDA_KAWPOW_SOURCES}
 )
-
-list(APPEND CUDA_SOURCES
-    src/RandomX/aes_cuda.hpp
-    src/RandomX/arqma/configuration.h
-    src/RandomX/arqma/randomx_arqma.cu
-    src/RandomX/blake2b_cuda.hpp
-    src/RandomX/common.hpp
-    src/RandomX/hash.hpp
-    src/RandomX/keva/configuration.h
-    src/RandomX/keva/randomx_keva.cu
-    src/RandomX/monero/configuration.h
-    src/RandomX/monero/randomx_monero.cu
-    src/RandomX/randomx_cuda.hpp
-    src/RandomX/randomx.cu
-    src/RandomX/wownero/configuration.h
-    src/RandomX/wownero/randomx_wownero.cu
-)
-
-list(APPEND CUDA_SOURCES
-    src/AstroBWT/dero/AstroBWT.cu
-    src/AstroBWT/dero/BWT.h
-    src/AstroBWT/dero/salsa20.h
-    src/AstroBWT/dero/sha3.h
-)
-
-if (WITH_DRIVER_API)
-    list(APPEND CUDA_SOURCES
-        src/KawPow/raven/CudaKawPow_gen.cpp
-        src/KawPow/raven/CudaKawPow_gen.h
-        src/KawPow/raven/KawPow.cu
-    )
-endif()
 
 if("${CUDA_COMPILER}" STREQUAL "clang")
     add_library(xmrig-cu STATIC ${CUDA_SOURCES})

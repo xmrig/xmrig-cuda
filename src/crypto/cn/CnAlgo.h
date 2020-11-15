@@ -34,7 +34,7 @@
 #include "crypto/common/Algorithm.h"
 
 
-namespace xmrig
+namespace xmrig_cuda
 {
 
 
@@ -152,8 +152,8 @@ public:
 #       endif
 #       ifdef XMRIG_ALGO_CN_HEAVY
         case Algorithm::CN_HEAVY_TUBE:
-            return Algorithm::CN_1;
 #       endif
+            return Algorithm::CN_1;
 
         case Algorithm::CN_2:
         case Algorithm::CN_R:
@@ -221,7 +221,7 @@ template<> constexpr inline size_t CnAlgo<Algorithm::CN_PICO_TLO>::memory() cons
 template<> constexpr inline uint32_t CnAlgo<Algorithm::CN_PICO_0>::mask() const             { return 0x1FFF0; }
 
 
-} /* namespace xmrig */
+} /* namespace xmrig_cuda */
 
 
 #endif /* XMRIG_CN_ALGO_H */

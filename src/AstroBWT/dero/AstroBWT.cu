@@ -165,6 +165,8 @@ void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t target, uint32_t *rescount, ui
     CUDA_CHECK_KERNEL(ctx->device_id, sha3<<<global_work_size, 32>>>((uint8_t*)ctx->astrobwt_tmp_indices, (uint32_t*)ctx->astrobwt_bwt_data_sizes, STAGE1_DATA_STRIDE * 8, (uint64_t*)ctx->astrobwt_salsa20_keys));
     CUDA_CHECK_KERNEL(ctx->device_id, filter<<<global_work_size / 32, 32>>>(nonce, BWT_DATA_MAX_SIZE, (uint32_t*)ctx->astrobwt_salsa20_keys, (uint32_t*)ctx->astrobwt_filtered_hashes));
 
+    CUDA_CHECK(ctx->device_id, cudaDeviceSynchronize());
+
     uint32_t num_filtered_hashes;
     CUDA_CHECK(ctx->device_id, cudaMemcpy(&num_filtered_hashes, ctx->astrobwt_filtered_hashes, sizeof(num_filtered_hashes), cudaMemcpyDeviceToHost));
 
@@ -182,6 +184,8 @@ void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t target, uint32_t *rescount, ui
         CUDA_CHECK_KERNEL(ctx->device_id, sha3<<<global_work_size, 32>>>((uint8_t*)ctx->astrobwt_tmp_indices, (uint32_t*)ctx->astrobwt_bwt_data_sizes, BWT_DATA_STRIDE * 8, (uint64_t*)ctx->astrobwt_salsa20_keys));
         CUDA_CHECK_KERNEL(ctx->device_id, find_shares<<<global_work_size / 32, 32>>>((uint64_t*)ctx->astrobwt_salsa20_keys, (uint32_t*)ctx->astrobwt_filtered_hashes, target, (uint32_t*)ctx->astrobwt_shares));
     }
+
+    CUDA_CHECK(ctx->device_id, cudaDeviceSynchronize());
 
     uint32_t shares[11];
     CUDA_CHECK(ctx->device_id, cudaMemcpy(shares, ctx->astrobwt_shares, sizeof(shares), cudaMemcpyDeviceToHost));
