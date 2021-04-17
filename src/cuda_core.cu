@@ -350,8 +350,8 @@ __global__ void cryptonight_core_gpu_phase2_double(
             __syncthreads();
 #           endif
 
-            myChunks[idx1 ^ 2 + sub] = ((ALGO == Algorithm::CN_RWZ) ? chunk1 : chunk3) + bx1;
-            myChunks[idx1 ^ 4 + sub] = ((ALGO == Algorithm::CN_RWZ) ? chunk3 : chunk1) + bx0;
+            myChunks[idx1 ^ 2 + sub] = (((ALGO == Algorithm::CN_RWZ) || (ALGO == Algorithm::CN_UPX2)) ? chunk1 : chunk3) + bx1;
+            myChunks[idx1 ^ 4 + sub] = (((ALGO == Algorithm::CN_RWZ) || (ALGO == Algorithm::CN_UPX2)) ? chunk3 : chunk1) + bx0;
             myChunks[idx1 ^ 6 + sub] = chunk2 + ax0;
         }
 
@@ -405,8 +405,8 @@ __global__ void cryptonight_core_gpu_phase2_double(
             __syncthreads( );
 #           endif
 
-            myChunks[idx1 ^ 2 + sub] = ((ALGO == Algorithm::CN_RWZ) ? chunk1 : chunk3) + bx1;
-            myChunks[idx1 ^ 4 + sub] = ((ALGO == Algorithm::CN_RWZ) ? chunk3 : chunk1) + bx0;
+            myChunks[idx1 ^ 2 + sub] = (((ALGO == Algorithm::CN_RWZ) || (ALGO == Algorithm::CN_UPX2)) ? chunk1 : chunk3) + bx1;
+            myChunks[idx1 ^ 4 + sub] = (((ALGO == Algorithm::CN_RWZ) || (ALGO == Algorithm::CN_UPX2)) ? chunk3 : chunk1) + bx0;
             myChunks[idx1 ^ 6 + sub] = chunk2 + ax0;
 
             ax0 += res;
@@ -939,6 +939,16 @@ void cryptonight_gpu_hash(nvid_ctx *ctx, const xmrig_cuda::Algorithm &algorithm,
 
         case Algorithm::CN_PICO_TLO:
             cryptonight_core_gpu_hash<Algorithm::CN_PICO_TLO>(ctx, startNonce);
+            break;
+
+        default:
+            break;
+        }
+    }
+    else if (algorithm.family() == Algorithm::CN_FEMTO) {
+        switch (algorithm.id()) {
+        case Algorithm::CN_UPX2:
+            cryptonight_core_gpu_hash<Algorithm::CN_UPX2>(ctx, startNonce);
             break;
 
         default:

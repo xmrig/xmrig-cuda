@@ -81,6 +81,12 @@ static AlgoName const algorithm_names[] = {
     { "cn-pico",          Algorithm::CN_PICO_0       },
     { "cn-pico/tlo",      Algorithm::CN_PICO_TLO     },
 #   endif
+#   ifdef XMRIG_ALGO_CN_FEMTO
+    { "cn/upx2",          Algorithm::CN_UPX2          },
+    // Algo names from other miners
+    { "cn-extremelite/upx2", Algorithm::CN_UPX2       },
+    { "cryptonight-upx/2",   Algorithm::CN_UPX2       },
+#   endif
 #   ifdef XMRIG_ALGO_ASTROBWT
     { "astrobwt",         Algorithm::ASTROBWT_DERO   },
 #   endif
