@@ -1,3 +1,6 @@
+# v6.12.0
+- [#95](https://github.com/xmrig/xmrig-cuda/pull/95) Added support for Uplexa (`cn/upx2` algorithm).
+
 # v6.5.0
 - [#74](https://github.com/xmrig/xmrig-cuda/pull/74) Fixed CUDA 8.0 support, RandomX, AstroBWT, and KawPow disabled for this CUDA version.
 - [#76](https://github.com/xmrig/xmrig-cuda/pull/76) Fixed high CPU usage on Cryptonight and AstroBWT.
