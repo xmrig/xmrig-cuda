@@ -99,6 +99,10 @@ if (XMRIG_OS_WIN)
     list(APPEND SOURCES res/app.rc)
 endif()
 
+if (XMRIG_OS_APPLE)
+    cmake_policy(SET CMP0042 NEW)
+endif()
+
 add_library(${CMAKE_PROJECT_NAME} SHARED ${SOURCES})
 target_link_libraries(${CMAKE_PROJECT_NAME} xmrig-cu ${LIBS})
 
