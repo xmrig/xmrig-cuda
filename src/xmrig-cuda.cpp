@@ -130,11 +130,11 @@ bool cnHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t height, uint64_t target
 }
 
 
-bool deviceInfo_v2(nvid_ctx *ctx, int32_t blocks, int32_t threads, const char *algo, int32_t dataset_host)
+bool deviceInfo(nvid_ctx *ctx, int32_t blocks, int32_t threads, uint32_t algo, int32_t dataset_host)
 {
     using namespace xmrig_cuda;
 
-    if (algo != nullptr) {
+    if (algo != Algorithm::INVALID) {
         ctx->algorithm = algo;
 
         if (!ctx->algorithm.isValid()) {
@@ -312,27 +312,6 @@ bool kawPowHash(nvid_ctx *ctx, uint8_t* job_blob, uint64_t target, uint32_t *res
 }
 
 
-bool kawPowPrepare(nvid_ctx *ctx, const void* cache, size_t cache_size, size_t dag_size, uint32_t height, const uint64_t* dag_sizes)
-{
-    using namespace xmrig_cuda;
-
-#   ifdef XMRIG_ALGO_KAWPOW
-    resetError(ctx->device_id);
-
-    try {
-        kawpow_prepare(ctx, cache, cache_size, nullptr, dag_size, height, dag_sizes);
-    }
-    catch (std::exception &ex) {
-        return saveError(ctx->device_id, ex);
-    }
-
-    return true;
-#   else
-    return saveError(ctx->device_id, kUnsupportedAlgorithm);
-#   endif
-}
-
-
 bool kawPowPrepare_v2(nvid_ctx *ctx, const void* cache, size_t cache_size, const void* dag_precalc, size_t dag_size, uint32_t height, const uint64_t* dag_sizes)
 {
     using namespace xmrig_cuda;
@@ -373,7 +352,7 @@ bool kawPowStopHash(nvid_ctx *ctx)
 }
 
 
-bool setJob_v2(nvid_ctx *ctx, const void *data, size_t size, const char *algo)
+bool setJob(nvid_ctx *ctx, const void *data, size_t size, uint32_t algo)
 {
     using namespace xmrig_cuda;
 
