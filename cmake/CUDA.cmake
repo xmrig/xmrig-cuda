@@ -209,6 +209,8 @@ if (WITH_RANDOMX)
         src/RandomX/arqma/randomx_arqma.cu
         src/RandomX/blake2b_cuda.hpp
         src/RandomX/common.hpp
+        src/RandomX/graft/configuration.h
+        src/RandomX/graft/randomx_graft.cu
         src/RandomX/hash.hpp
         src/RandomX/keva/configuration.h
         src/RandomX/keva/randomx_keva.cu
