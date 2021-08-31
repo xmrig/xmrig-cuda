@@ -21,7 +21,7 @@ along with RandomX CUDA.  If not, see<http://www.gnu.org/licenses/>.
 */
 
 constexpr size_t HASH_SIZE = 64;
-constexpr size_t ENTROPY_SIZE = 128 + RANDOMX_PROGRAM_SIZE * 8;
+constexpr size_t ENTROPY_SIZE = 128 + ((RANDOMX_PROGRAM_SIZE * 8 + 127) / 128) * 128;
 constexpr size_t REGISTERS_SIZE = 256;
 constexpr size_t IMM_BUF_SIZE = RANDOMX_PROGRAM_SIZE * 4 - REGISTERS_SIZE;
 constexpr size_t IMM_INDEX_COUNT = (IMM_BUF_SIZE / 4) - 2;

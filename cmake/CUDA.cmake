@@ -115,8 +115,26 @@ option(CUDA_SHOW_REGISTER "Show registers used for each kernel and compute archi
 option(CUDA_KEEP_FILES "Keep all intermediate files that are generated during internal compilation steps" OFF)
 
 if (WITH_DRIVER_API)
-    find_library(CUDA_LIB libcuda cuda HINTS "${CUDA_TOOLKIT_ROOT_DIR}/lib64" "${LIBCUDA_LIBRARY_DIR}" "${CUDA_TOOLKIT_ROOT_DIR}/lib/x64" /usr/lib64 /usr/local/cuda/lib64)
-    find_library(CUDA_NVRTC_LIB libnvrtc nvrtc HINTS "${CUDA_TOOLKIT_ROOT_DIR}/lib64" "${LIBNVRTC_LIBRARY_DIR}" "${CUDA_TOOLKIT_ROOT_DIR}/lib/x64" /usr/lib64 /usr/local/cuda/lib64)
+    set(CUDA_LIB_HINTS "${LIBCUDA_LIBRARY_DIR}")
+    set(CUDA_NVRTC_LIB_HINTS "${LIBNVRTC_LIBRARY_DIR}")
+    if (XMRIG_OS_APPLE)
+        list(APPEND CUDA_LIB_HINTS "${CUDA_TOOLKIT_ROOT_DIR}/lib")
+        list(APPEND CUDA_NVRTC_LIB_HINTS "${CUDA_TOOLKIT_ROOT_DIR}/lib")
+    else()
+        set(LIB_HINTS
+            "${CUDA_TOOLKIT_ROOT_DIR}/lib64"
+            "${CUDA_TOOLKIT_ROOT_DIR}/lib/x64"
+            "/usr/lib64"
+            "/usr/local/cuda/lib64"
+            )
+        list(APPEND CUDA_LIB_HINTS ${LIB_HINTS})
+        list(APPEND CUDA_NVRTC_LIB_HINTS ${LIB_HINTS})
+        unset(LIB_HINTS)
+    endif()
+    find_library(CUDA_LIB libcuda cuda HINTS ${CUDA_LIB_HINTS})
+    find_library(CUDA_NVRTC_LIB libnvrtc nvrtc HINTS ${CUDA_NVRTC_LIB_HINTS})
+    unset(CUDA_LIB_HINTS)
+    unset(CUDA_NVRTC_LIB_HINTS)
 
     list(APPEND LIBS ${CUDA_LIB} ${CUDA_NVRTC_LIB})
 endif()
@@ -191,6 +209,8 @@ if (WITH_RANDOMX)
         src/RandomX/arqma/randomx_arqma.cu
         src/RandomX/blake2b_cuda.hpp
         src/RandomX/common.hpp
+        src/RandomX/graft/configuration.h
+        src/RandomX/graft/randomx_graft.cu
         src/RandomX/hash.hpp
         src/RandomX/keva/configuration.h
         src/RandomX/keva/randomx_keva.cu

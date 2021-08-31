@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.12)
 project(xmrig-cuda)
 include(cmake/CUDA-Version.cmake)
 
@@ -97,6 +97,10 @@ endif()
 
 if (XMRIG_OS_WIN)
     list(APPEND SOURCES res/app.rc)
+endif()
+
+if (XMRIG_OS_APPLE)
+    cmake_policy(SET CMP0042 NEW)
 endif()
 
 add_library(${CMAKE_PROJECT_NAME} SHARED ${SOURCES})

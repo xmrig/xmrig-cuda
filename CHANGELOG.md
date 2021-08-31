@@ -1,3 +1,8 @@
+# v6.15.0
+- **ABI changed, minimum supported XMRig version now is 6.15.0.**
+- [#2563](https://github.com/xmrig/xmrig/pull/2563) Added new algorithm RandomX Graft (`rx/graft`).
+- [#104](https://github.com/xmrig/xmrig-cuda/pull/104) Fixed build on macOS 10.13 (last supported for CUDA).
+
 # v6.12.0
 - [#95](https://github.com/xmrig/xmrig-cuda/pull/95) Added support for Uplexa (`cn/upx2` algorithm).
 
