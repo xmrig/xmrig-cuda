@@ -20,6 +20,9 @@
 #ifndef XMRIG_ALGORITHM_H
 #define XMRIG_ALGORITHM_H
 
+#ifndef uint32_t
+  #include <cstdint>
+#endif
 
 #include <vector>
 
