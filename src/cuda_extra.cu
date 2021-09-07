@@ -374,7 +374,7 @@ int cryptonight_extra_cpu_init(nvid_ctx *ctx, const xmrig_cuda::Algorithm &algor
     CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_result_nonce, 16 * sizeof (uint32_t)));
 
     // Allocate buffers for Cryptonight
-    if (hashMemSize) {
+    if (hashMemSize && algorithm.isCN()) {
         CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_ctx_key1, 40 * sizeof(uint32_t) * wsize));
         CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_ctx_key2, 40 * sizeof(uint32_t) * wsize));
         CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_ctx_text, 32 * sizeof(uint32_t) * wsize));
