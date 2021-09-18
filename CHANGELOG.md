@@ -1,3 +1,8 @@
+# v6.15.1
+- [#119](https://github.com/xmrig/xmrig-cuda/issues/119) Fixed compile error on Linux.
+- [#124](https://github.com/xmrig/xmrig-cuda/pull/124) Fixed `"out of memory"` error on non-CryptoNight algorithms.
+- [#125](https://github.com/xmrig/xmrig-cuda/pull/125) Fixed `"invalid argument"` error.
+
 # v6.15.0
 - **ABI changed, minimum supported XMRig version now is 6.15.0.**
 - [#2563](https://github.com/xmrig/xmrig/pull/2563) Added new algorithm RandomX Graft (`rx/graft`).
