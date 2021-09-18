@@ -68,6 +68,7 @@ public:
         if (m_refs == 0) {
             cudaHostUnregister(m_ptr);
         }
+        m_ptr = nullptr;
     }
 
     int32_t m_refs  = 0;
