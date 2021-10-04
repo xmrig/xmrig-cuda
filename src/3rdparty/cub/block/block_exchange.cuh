@@ -102,6 +102,13 @@ namespace cub {
  * \par Performance Considerations
  * - Proper device-specific padding ensures zero bank conflicts for most types.
  *
+ * \par Re-using dynamically allocating shared memory
+ * The following example under the examples/block folder illustrates usage of
+ * dynamically shared memory with BlockReduce and how to re-purpose
+ * the same memory region:
+ * <a href="../../examples/block/example_block_reduce_dyn_smem.cu">example_block_reduce_dyn_smem.cu</a>
+ *
+ * This example can be easily adapted to the storage required by BlockExchange.
  */
 template <
     typename    InputT,
@@ -472,7 +479,7 @@ private:
         {
             int item_offset = warp_offset + (ITEM * WARP_TIME_SLICED_THREADS) + lane_id;
             if (INSERT_PADDING) item_offset += item_offset >> LOG_SMEM_BANKS;
-            temp_storage.buff[item_offset] = input_items[ITEM];
+            new (&temp_storage.buff[item_offset]) InputT (input_items[ITEM]);
         }
 
         WARP_SYNC(0xffffffff);
@@ -482,7 +489,7 @@ private:
         {
             int item_offset = warp_offset + ITEM + (lane_id * ITEMS_PER_THREAD);
             if (INSERT_PADDING) item_offset += item_offset >> LOG_SMEM_BANKS;
-            output_items[ITEM] = temp_storage.buff[item_offset];
+            new(&output_items[ITEM]) OutputT(temp_storage.buff[item_offset]);
         }
     }
 
