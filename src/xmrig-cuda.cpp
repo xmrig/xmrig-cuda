@@ -529,7 +529,7 @@ void release(nvid_ctx *ctx)
     cudaFree(ctx->d_rx_vm_states);
     cudaFree(ctx->d_rx_rounding);
 
-#   ifdef WITH_KAWPOW
+#   ifdef XMRIG_ALGO_KAWPOW
     cudaFree(ctx->kawpow_cache);
     cudaFree(ctx->kawpow_dag);
     cudaFreeHost(ctx->kawpow_stop_host);
