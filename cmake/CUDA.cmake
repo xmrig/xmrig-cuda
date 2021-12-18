@@ -11,6 +11,8 @@ set(MSG_CUDA_MAP "\n\n"
     "Reference https://developer.nvidia.com/cuda-gpus#compute for arch and family name\n\n"
 )
 
+set(USELESS_CUDA_ARCH "32;37;52;53;61;62;72;89")
+
 add_definitions(-DCUB_IGNORE_DEPRECATED_CPP_DIALECT -DTHRUST_IGNORE_DEPRECATED_CPP_DIALECT)
 
 option(XMRIG_LARGEGRID "Support large CUDA block count > 128" ON)
@@ -65,6 +67,15 @@ list(REMOVE_ITEM SUPPORT_CUDA_ARCH "")
 message(STATUS "CUDA Architectures supported by [${CUDA_NVCC_EXECUTABLE}]: ${SUPPORT_CUDA_ARCH}")
 set(DEFAULT_CUDA_ARCH "${SUPPORT_CUDA_ARCH}")
 
+# Filter bloaty architectures
+foreach(CUDA_ARCH_ELEM ${USELESS_CUDA_ARCH})
+    list(FIND DEFAULT_CUDA_ARCH "${CUDA_ARCH_ELEM}" POS)
+    if(POS GREATER -1)
+        list(REMOVE_ITEM DEFAULT_CUDA_ARCH "${CUDA_ARCH_ELEM}")
+    endif()
+endforeach()
+message(STATUS "CUDA Architectures filtered defaults: ${DEFAULT_CUDA_ARCH}")
+
 set(CUDA_ARCH "${DEFAULT_CUDA_ARCH}" CACHE STRING "Set GPU architecture (semicolon separated list, e.g. '-DCUDA_ARCH=20;35;60')")
 
 # validate architectures (only numbers are allowed)
@@ -117,6 +128,7 @@ endforeach()
 unset(POS)
 unset(CUDA_ARCH_ELEM)
 unset(SUPPORT_CUDA_ARCH)
+unset(USELESS_CUDA_ARCH)
 unset(MSG_CUDA_MAP)
 list(SORT CUDA_ARCH)
 list(REMOVE_DUPLICATES CUDA_ARCH)
