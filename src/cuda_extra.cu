@@ -567,7 +567,7 @@ int cuda_get_deviceinfo(nvid_ctx *ctx)
         // Leave memory for 2080 MB dataset + 64 MB free
         // Each thread uses 1 scratchpad plus a few small buffers on GPU
         const size_t dataset_size = 2080u << 20;
-        const size_t max_blocks = (freeMemory - (ctx->rx_dataset_host ? 0 : dataset_size) - (64u << 20)) / (ctx->algorithm.l3() + 32768) / 32;
+        const int max_blocks = (freeMemory - (ctx->rx_dataset_host ? 0 : dataset_size) - (64u << 20)) / (ctx->algorithm.l3() + 32768) / 32;
         if (ctx->device_blocks > max_blocks) {
             ctx->device_blocks = max_blocks;
         }
