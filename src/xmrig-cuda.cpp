@@ -253,6 +253,10 @@ bool astroBWTHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t 
             AstroBWT_Dero::hash(ctx, startNonce, target, rescount, resnonce);
             break;
 
+        case Algorithm::ASTROBWT_DERO_2:
+            AstroBWT_Dero_HE::hash(ctx, startNonce, target, rescount, resnonce);
+            break;
+
         default:
             throw std::runtime_error(kUnsupportedAlgorithm);
         }
@@ -276,7 +280,18 @@ bool astroBWTPrepare(nvid_ctx *ctx, uint32_t batchSize)
     resetError(ctx->device_id);
 
     try {
-        astrobwt_prepare(ctx, batchSize);
+        switch (ctx->algorithm.id()) {
+        case Algorithm::ASTROBWT_DERO:
+            astrobwt_prepare(ctx, batchSize);
+            break;
+
+        case Algorithm::ASTROBWT_DERO_2:
+            astrobwt_prepare_v2(ctx, batchSize);
+            break;
+
+        default:
+            throw std::runtime_error(kUnsupportedAlgorithm);
+        }
     }
     catch (std::exception &ex) {
         return saveError(ctx->device_id, ex);
