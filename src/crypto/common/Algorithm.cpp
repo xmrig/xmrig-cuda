@@ -49,7 +49,7 @@ xmrig_cuda::Algorithm::Id xmrig_cuda::Algorithm::parse(uint32_t id)
         AR2_CHUKWA, AR2_CHUKWA_V2, AR2_WRKZ,
 #       endif
 #       ifdef XMRIG_ALGO_ASTROBWT
-        ASTROBWT_DERO,
+        ASTROBWT_DERO, ASTROBWT_DERO_2,
 #       endif
 #       ifdef XMRIG_ALGO_KAWPOW
         KAWPOW_RVN,
