@@ -1,6 +1,6 @@
 /* XMRig
- * Copyright (c) 2018-2021 SChernykh   <https://github.com/SChernykh>
- * Copyright (c) 2016-2021 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright (c) 2018-2022 SChernykh   <https://github.com/SChernykh>
+ * Copyright (c) 2016-2022 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -22,14 +22,14 @@
 #define APP_ID        "xmrig-cuda"
 #define APP_NAME      "XMRig"
 #define APP_DESC      "XMRig CUDA plugin"
-#define APP_VERSION   "6.15.1"
+#define APP_VERSION   "6.17.0"
 #define APP_DOMAIN    "xmrig.com"
 #define APP_SITE      "www.xmrig.com"
-#define APP_COPYRIGHT "Copyright (C) 2016-2021 xmrig.com"
+#define APP_COPYRIGHT "Copyright (C) 2016-2022 xmrig.com"
 
 #define APP_VER_MAJOR  6
-#define APP_VER_MINOR  15
-#define APP_VER_PATCH  1
+#define APP_VER_MINOR  17
+#define APP_VER_PATCH  0
 
 #define API_VERSION    4
 

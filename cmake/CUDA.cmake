@@ -231,6 +231,10 @@ if (WITH_ASTROBWT)
         src/AstroBWT/dero/BWT.h
         src/AstroBWT/dero/salsa20.h
         src/AstroBWT/dero/sha3.h
+        src/AstroBWT/dero_he/AstroBWT_v2.cu
+        src/AstroBWT/dero_he/BWT.h
+        src/AstroBWT/dero_he/salsa20.h
+        src/AstroBWT/dero_he/sha3.h
     )
 else()
     set(CUDA_ASTROBWT_SOURCES "")

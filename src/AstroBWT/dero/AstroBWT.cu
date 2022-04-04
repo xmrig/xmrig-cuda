@@ -31,7 +31,7 @@
 #include <cuda_runtime.h>
 #include <cstdint>
 
-__device__ void sync()
+static __device__ __forceinline__ void sync()
 {
 #	if (__CUDACC_VER_MAJOR__ >= 9)
     __syncwarp();

@@ -95,6 +95,12 @@ typedef uint64_t IndexType;
 typedef int IndexType;
 #endif
 
+#if __CUDACC_VER_MAJOR__ >= 11
+#define float_as_int __float_as_int
+#define int_as_float __int_as_float
+#define int2float __int2float_rn
+#endif
+
 template< typename T >
 __device__ __forceinline__ T loadGlobal64( T * const addr )
 {
