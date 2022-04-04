@@ -1,3 +1,6 @@
+# v6.17.0
+- [#157](https://github.com/xmrig/xmrig-cuda/pull/157) Added Dero HE (`astrobwt/v2`) support.
+
 # v6.15.1
 - [#119](https://github.com/xmrig/xmrig-cuda/issues/119) Fixed compile error on Linux.
 - [#124](https://github.com/xmrig/xmrig-cuda/pull/124) Fixed `"out of memory"` error on non-CryptoNight algorithms.
