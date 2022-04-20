@@ -227,10 +227,6 @@ endif()
 
 if (WITH_ASTROBWT)
     set(CUDA_ASTROBWT_SOURCES
-        src/AstroBWT/dero/AstroBWT.cu
-        src/AstroBWT/dero/BWT.h
-        src/AstroBWT/dero/salsa20.h
-        src/AstroBWT/dero/sha3.h
         src/AstroBWT/dero_he/AstroBWT_v2.cu
         src/AstroBWT/dero_he/BWT.h
         src/AstroBWT/dero_he/salsa20.h

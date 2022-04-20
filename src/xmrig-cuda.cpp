@@ -249,10 +249,6 @@ bool astroBWTHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t 
 
     try {
         switch (ctx->algorithm.id()) {
-        case Algorithm::ASTROBWT_DERO:
-            AstroBWT_Dero::hash(ctx, startNonce, target, rescount, resnonce);
-            break;
-
         case Algorithm::ASTROBWT_DERO_2:
             AstroBWT_Dero_HE::hash(ctx, startNonce, target, rescount, resnonce);
             break;
@@ -281,10 +277,6 @@ bool astroBWTPrepare(nvid_ctx *ctx, uint32_t batchSize)
 
     try {
         switch (ctx->algorithm.id()) {
-        case Algorithm::ASTROBWT_DERO:
-            astrobwt_prepare(ctx, batchSize);
-            break;
-
         case Algorithm::ASTROBWT_DERO_2:
             astrobwt_prepare_v2(ctx, batchSize);
             break;
