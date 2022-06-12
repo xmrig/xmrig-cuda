@@ -88,19 +88,6 @@ struct nvid_ctx {
     uint32_t *d_rx_vm_states            = nullptr;
     uint32_t *d_rx_rounding             = nullptr;
 
-    uint32_t astrobwt_intensity         = 0;
-    uint32_t astrobwt_batch1_size       = 0;
-    uint32_t astrobwt_processed_hashes  = 0;
-    void* astrobwt_salsa20_keys         = nullptr;
-    void* astrobwt_bwt_data             = nullptr;
-    void* astrobwt_bwt_data_sizes       = nullptr;
-    void* astrobwt_indices              = nullptr;
-    void* astrobwt_tmp_indices          = nullptr;
-    void* astrobwt_filtered_hashes      = nullptr;
-    void* astrobwt_shares               = nullptr;
-    void* astrobwt_offsets_begin        = nullptr;
-    void* astrobwt_offsets_end          = nullptr;
-
 #   ifdef XMRIG_ALGO_KAWPOW
     void* kawpow_cache                  = nullptr;
     size_t kawpow_cache_size            = 0;
@@ -139,12 +126,6 @@ namespace RandomX_Monero  { void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t ta
 namespace RandomX_Wownero { void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce, uint32_t batch_size); }
 namespace RandomX_Keva    { void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce, uint32_t batch_size); }
 namespace RandomX_Graft   { void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce, uint32_t batch_size); }
-
-void astrobwt_prepare(nvid_ctx *ctx, uint32_t batch_size);
-void astrobwt_prepare_v2(nvid_ctx* ctx, uint32_t batch_size);
-
-namespace AstroBWT_Dero    { void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce); }
-namespace AstroBWT_Dero_HE { void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce); }
 
 #ifdef XMRIG_ALGO_KAWPOW
 void kawpow_prepare(nvid_ctx *ctx, const void* cache, size_t cache_size, const void* dag_precalc, size_t dag_size, uint32_t height, const uint64_t* dag_sizes);
