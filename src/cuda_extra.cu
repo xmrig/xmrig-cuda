@@ -573,16 +573,6 @@ int cuda_get_deviceinfo(nvid_ctx *ctx)
         }
     }
 
-    if ((ctx->algorithm.family() == Algorithm::ASTROBWT) && ((ctx->device_blocks < 0) || (ctx->device_threads < 0))) {
-        ctx->device_threads = 32;
-        if (ctx->algorithm.id() == Algorithm::ASTROBWT_DERO_2) {
-            ctx->device_blocks = props.multiProcessorCount * 8;
-        }
-        else {
-            ctx->device_blocks = freeMemory / (ctx->algorithm.l3() * 32);
-        }
-    }
-
     if ((ctx->algorithm.family() == Algorithm::KAWPOW) && ((ctx->device_blocks < 0) || (ctx->device_threads < 0))) {
         ctx->device_threads = 256;
         ctx->device_blocks = props.multiProcessorCount * 2048;

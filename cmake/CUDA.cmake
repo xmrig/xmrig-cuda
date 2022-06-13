@@ -225,21 +225,6 @@ else()
     set(CUDA_RANDOMX_SOURCES "")
 endif()
 
-if (WITH_ASTROBWT)
-    set(CUDA_ASTROBWT_SOURCES
-        src/AstroBWT/dero/AstroBWT.cu
-        src/AstroBWT/dero/BWT.h
-        src/AstroBWT/dero/salsa20.h
-        src/AstroBWT/dero/sha3.h
-        src/AstroBWT/dero_he/AstroBWT_v2.cu
-        src/AstroBWT/dero_he/BWT.h
-        src/AstroBWT/dero_he/salsa20.h
-        src/AstroBWT/dero_he/sha3.h
-    )
-else()
-    set(CUDA_ASTROBWT_SOURCES "")
-endif()
-
 if (WITH_KAWPOW AND WITH_DRIVER_API)
     set(CUDA_KAWPOW_SOURCES
         src/KawPow/raven/CudaKawPow_gen.cpp
@@ -264,7 +249,6 @@ set(CUDA_SOURCES
     src/cuda_keccak.hpp
     src/cuda_skein.hpp
     ${CUDA_RANDOMX_SOURCES}
-    ${CUDA_ASTROBWT_SOURCES}
     ${CUDA_KAWPOW_SOURCES}
 )
 
