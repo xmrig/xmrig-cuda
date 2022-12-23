@@ -24,7 +24,7 @@ endif()
 # Kepler GPUs are only supported with CUDA < 11.0
 if (CUDA_VERSION VERSION_LESS 11.0)
     list(APPEND DEFAULT_CUDA_ARCH "30")
-else()
+elseif (CUDA_VERSION VERSION_LESS 12.0)
     list(APPEND DEFAULT_CUDA_ARCH "35")
 endif()
 
@@ -46,6 +46,18 @@ endif()
 # add Ampere support for CUDA >= 11.0
 if (NOT CUDA_VERSION VERSION_LESS 11.0)
     list(APPEND DEFAULT_CUDA_ARCH "80")
+endif()
+
+if (NOT CUDA_VERSION VERSION_LESS 11.1)
+    list(APPEND DEFAULT_CUDA_ARCH "86")
+endif()
+
+if (NOT CUDA_VERSION VERSION_LESS 11.5)
+    list(APPEND DEFAULT_CUDA_ARCH "87")
+endif()
+
+if (NOT CUDA_VERSION VERSION_LESS 11.8)
+    list(APPEND DEFAULT_CUDA_ARCH "90")
 endif()
 list(SORT DEFAULT_CUDA_ARCH)
 
