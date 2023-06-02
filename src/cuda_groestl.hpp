@@ -15,16 +15,16 @@
 #define li_32(h) 0x##h##u
 #define GROESTL_EXT_BYTE(var,n) ((uint8_t)((uint32_t)(var) >> (8*n)))
 
-#define u32BIG(a)	\
-	((GROESTL_ROTL32(a,8) & li_32(00FF00FF)) | (GROESTL_ROTL32(a,24) & li_32(FF00FF00)))
+#define u32BIG(a)    \
+    ((GROESTL_ROTL32(a,8) & li_32(00FF00FF)) | (GROESTL_ROTL32(a,24) & li_32(FF00FF00)))
 
 typedef struct {
-	uint32_t chaining[GROESTL_SIZE512/sizeof(uint32_t)];            /* actual state */
-	uint32_t block_counter1,
-	block_counter2;         /* message block counter(s) */
-	BitSequence buffer[GROESTL_SIZE512];      /* data buffer */
-	int buf_ptr;              /* data buffer pointer */
-	int bits_in_last_byte;    /* no. of message bits in last byte of data buffer */
+    uint32_t chaining[GROESTL_SIZE512/sizeof(uint32_t)];            /* actual state */
+    uint32_t block_counter1,
+    block_counter2;         /* message block counter(s) */
+    BitSequence buffer[GROESTL_SIZE512];      /* data buffer */
+    int buf_ptr;              /* data buffer pointer */
+    int bits_in_last_byte;    /* no. of message bits in last byte of data buffer */
 } groestlHashState;
 
 
@@ -65,293 +65,293 @@ __constant__ uint32_t d_groestl_T[512] =
 };
 
 #define GROESTL_ROTATE_COLUMN_DOWN(v1, v2, amount_bytes, temp_var) \
-	{ temp_var = (v1<<(8*amount_bytes))|(v2>>(8*(4-amount_bytes))); \
-		v2 = (v2<<(8*amount_bytes))|(v1>>(8*(4-amount_bytes))); \
-		v1 = temp_var; }
+    { temp_var = (v1<<(8*amount_bytes))|(v2>>(8*(4-amount_bytes))); \
+        v2 = (v2<<(8*amount_bytes))|(v1>>(8*(4-amount_bytes))); \
+        v1 = temp_var; }
 
 #define GROESTL_COLUMN(x,y,i,c0,c1,c2,c3,c4,c5,c6,c7,tv1,tv2,tu,tl,t) \
-	tu = d_groestl_T[2*(uint32_t)x[4*c0+0]];	\
-	tl = d_groestl_T[2*(uint32_t)x[4*c0+0]+1];	\
-	tv1 = d_groestl_T[2*(uint32_t)x[4*c1+1]];	\
-	tv2 = d_groestl_T[2*(uint32_t)x[4*c1+1]+1];	\
-	GROESTL_ROTATE_COLUMN_DOWN(tv1,tv2,1,t)		\
-	tu ^= tv1;									\
-	tl ^= tv2;									\
-	tv1 = d_groestl_T[2*(uint32_t)x[4*c2+2]];	\
-	tv2 = d_groestl_T[2*(uint32_t)x[4*c2+2]+1];	\
-	GROESTL_ROTATE_COLUMN_DOWN(tv1,tv2,2,t)		\
-	tu ^= tv1;									\
-	tl ^= tv2;   								\
-	tv1 = d_groestl_T[2*(uint32_t)x[4*c3+3]];	\
-	tv2 = d_groestl_T[2*(uint32_t)x[4*c3+3]+1];	\
-	GROESTL_ROTATE_COLUMN_DOWN(tv1,tv2,3,t)		\
-	tu ^= tv1;									\
-	tl ^= tv2;									\
-	tl ^= d_groestl_T[2*(uint32_t)x[4*c4+0]];	\
-	tu ^= d_groestl_T[2*(uint32_t)x[4*c4+0]+1];	\
-	tv1 = d_groestl_T[2*(uint32_t)x[4*c5+1]];	\
-	tv2 = d_groestl_T[2*(uint32_t)x[4*c5+1]+1];	\
-	GROESTL_ROTATE_COLUMN_DOWN(tv1,tv2,1,t)		\
-	tl ^= tv1;									\
-	tu ^= tv2;									\
-	tv1 = d_groestl_T[2*(uint32_t)x[4*c6+2]];	\
-	tv2 = d_groestl_T[2*(uint32_t)x[4*c6+2]+1];	\
-	GROESTL_ROTATE_COLUMN_DOWN(tv1,tv2,2,t)		\
-	tl ^= tv1;									\
-	tu ^= tv2;   								\
-	tv1 = d_groestl_T[2*(uint32_t)x[4*c7+3]];	\
-	tv2 = d_groestl_T[2*(uint32_t)x[4*c7+3]+1];	\
-	GROESTL_ROTATE_COLUMN_DOWN(tv1,tv2,3,t)		\
-	tl ^= tv1;									\
-	tu ^= tv2;									\
-	y[i] = tu;									\
-	y[i+1] = tl;
+    tu = d_groestl_T[2*(uint32_t)x[4*c0+0]];    \
+    tl = d_groestl_T[2*(uint32_t)x[4*c0+0]+1];    \
+    tv1 = d_groestl_T[2*(uint32_t)x[4*c1+1]];    \
+    tv2 = d_groestl_T[2*(uint32_t)x[4*c1+1]+1];    \
+    GROESTL_ROTATE_COLUMN_DOWN(tv1,tv2,1,t)        \
+    tu ^= tv1;                                    \
+    tl ^= tv2;                                    \
+    tv1 = d_groestl_T[2*(uint32_t)x[4*c2+2]];    \
+    tv2 = d_groestl_T[2*(uint32_t)x[4*c2+2]+1];    \
+    GROESTL_ROTATE_COLUMN_DOWN(tv1,tv2,2,t)        \
+    tu ^= tv1;                                    \
+    tl ^= tv2;                                   \
+    tv1 = d_groestl_T[2*(uint32_t)x[4*c3+3]];    \
+    tv2 = d_groestl_T[2*(uint32_t)x[4*c3+3]+1];    \
+    GROESTL_ROTATE_COLUMN_DOWN(tv1,tv2,3,t)        \
+    tu ^= tv1;                                    \
+    tl ^= tv2;                                    \
+    tl ^= d_groestl_T[2*(uint32_t)x[4*c4+0]];    \
+    tu ^= d_groestl_T[2*(uint32_t)x[4*c4+0]+1];    \
+    tv1 = d_groestl_T[2*(uint32_t)x[4*c5+1]];    \
+    tv2 = d_groestl_T[2*(uint32_t)x[4*c5+1]+1];    \
+    GROESTL_ROTATE_COLUMN_DOWN(tv1,tv2,1,t)        \
+    tl ^= tv1;                                    \
+    tu ^= tv2;                                    \
+    tv1 = d_groestl_T[2*(uint32_t)x[4*c6+2]];    \
+    tv2 = d_groestl_T[2*(uint32_t)x[4*c6+2]+1];    \
+    GROESTL_ROTATE_COLUMN_DOWN(tv1,tv2,2,t)        \
+    tl ^= tv1;                                    \
+    tu ^= tv2;                                   \
+    tv1 = d_groestl_T[2*(uint32_t)x[4*c7+3]];    \
+    tv2 = d_groestl_T[2*(uint32_t)x[4*c7+3]+1];    \
+    GROESTL_ROTATE_COLUMN_DOWN(tv1,tv2,3,t)        \
+    tl ^= tv1;                                    \
+    tu ^= tv2;                                    \
+    y[i] = tu;                                    \
+    y[i+1] = tl;
 
 __device__ void cn_groestl_RND512P(uint8_t * __restrict__ x, uint32_t * __restrict__ y, uint32_t r)
 {
-	uint32_t temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp;
-	uint32_t* x32 = (uint32_t*)x;
-	x32[ 0] ^= 0x00000000^r;
-	x32[ 2] ^= 0x00000010^r;
-	x32[ 4] ^= 0x00000020^r;
-	x32[ 6] ^= 0x00000030^r;
-	x32[ 8] ^= 0x00000040^r;
-	x32[10] ^= 0x00000050^r;
-	x32[12] ^= 0x00000060^r;
-	x32[14] ^= 0x00000070^r;
-	GROESTL_COLUMN(x,y, 0,  0,  2,  4,  6,  9, 11, 13, 15, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
-	GROESTL_COLUMN(x,y, 2,  2,  4,  6,  8, 11, 13, 15,  1, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
-	GROESTL_COLUMN(x,y, 4,  4,  6,  8, 10, 13, 15,  1,  3, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
-	GROESTL_COLUMN(x,y, 6,  6,  8, 10, 12, 15,  1,  3,  5, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
-	GROESTL_COLUMN(x,y, 8,  8, 10, 12, 14,  1,  3,  5,  7, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
-	GROESTL_COLUMN(x,y,10, 10, 12, 14,  0,  3,  5,  7,  9, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
-	GROESTL_COLUMN(x,y,12, 12, 14,  0,  2,  5,  7,  9, 11, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
-	GROESTL_COLUMN(x,y,14, 14,  0,  2,  4,  7,  9, 11, 13, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
+    uint32_t temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp;
+    uint32_t* x32 = (uint32_t*)x;
+    x32[ 0] ^= 0x00000000^r;
+    x32[ 2] ^= 0x00000010^r;
+    x32[ 4] ^= 0x00000020^r;
+    x32[ 6] ^= 0x00000030^r;
+    x32[ 8] ^= 0x00000040^r;
+    x32[10] ^= 0x00000050^r;
+    x32[12] ^= 0x00000060^r;
+    x32[14] ^= 0x00000070^r;
+    GROESTL_COLUMN(x,y, 0,  0,  2,  4,  6,  9, 11, 13, 15, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
+    GROESTL_COLUMN(x,y, 2,  2,  4,  6,  8, 11, 13, 15,  1, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
+    GROESTL_COLUMN(x,y, 4,  4,  6,  8, 10, 13, 15,  1,  3, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
+    GROESTL_COLUMN(x,y, 6,  6,  8, 10, 12, 15,  1,  3,  5, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
+    GROESTL_COLUMN(x,y, 8,  8, 10, 12, 14,  1,  3,  5,  7, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
+    GROESTL_COLUMN(x,y,10, 10, 12, 14,  0,  3,  5,  7,  9, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
+    GROESTL_COLUMN(x,y,12, 12, 14,  0,  2,  5,  7,  9, 11, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
+    GROESTL_COLUMN(x,y,14, 14,  0,  2,  4,  7,  9, 11, 13, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
 }
 
 __device__ void cn_groestl_RND512Q(uint8_t * __restrict__ x, uint32_t * __restrict__ y, uint32_t r)
 {
-	uint32_t temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp;
-	uint32_t* x32 = (uint32_t*)x;
-	x32[ 0] = ~x32[ 0];
-	x32[ 1] ^= 0xffffffff^r;
-	x32[ 2] = ~x32[ 2];
-	x32[ 3] ^= 0xefffffff^r;
-	x32[ 4] = ~x32[ 4];
-	x32[ 5] ^= 0xdfffffff^r;
-	x32[ 6] = ~x32[ 6];
-	x32[ 7] ^= 0xcfffffff^r;
-	x32[ 8] = ~x32[ 8];
-	x32[ 9] ^= 0xbfffffff^r;
-	x32[10] = ~x32[10];
-	x32[11] ^= 0xafffffff^r;
-	x32[12] = ~x32[12];
-	x32[13] ^= 0x9fffffff^r;
-	x32[14] = ~x32[14];
-	x32[15] ^= 0x8fffffff^r;
-	GROESTL_COLUMN(x,y, 0,  2,  6, 10, 14,  1,  5,  9, 13, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
-	GROESTL_COLUMN(x,y, 2,  4,  8, 12,  0,  3,  7, 11, 15, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
-	GROESTL_COLUMN(x,y, 4,  6, 10, 14,  2,  5,  9, 13,  1, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
-	GROESTL_COLUMN(x,y, 6,  8, 12,  0,  4,  7, 11, 15,  3, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
-	GROESTL_COLUMN(x,y, 8, 10, 14,  2,  6,  9, 13,  1,  5, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
-	GROESTL_COLUMN(x,y,10, 12,  0,  4,  8, 11, 15,  3,  7, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
-	GROESTL_COLUMN(x,y,12, 14,  2,  6, 10, 13,  1,  5,  9, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
-	GROESTL_COLUMN(x,y,14,  0,  4,  8, 12, 15,  3,  7, 11, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
+    uint32_t temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp;
+    uint32_t* x32 = (uint32_t*)x;
+    x32[ 0] = ~x32[ 0];
+    x32[ 1] ^= 0xffffffff^r;
+    x32[ 2] = ~x32[ 2];
+    x32[ 3] ^= 0xefffffff^r;
+    x32[ 4] = ~x32[ 4];
+    x32[ 5] ^= 0xdfffffff^r;
+    x32[ 6] = ~x32[ 6];
+    x32[ 7] ^= 0xcfffffff^r;
+    x32[ 8] = ~x32[ 8];
+    x32[ 9] ^= 0xbfffffff^r;
+    x32[10] = ~x32[10];
+    x32[11] ^= 0xafffffff^r;
+    x32[12] = ~x32[12];
+    x32[13] ^= 0x9fffffff^r;
+    x32[14] = ~x32[14];
+    x32[15] ^= 0x8fffffff^r;
+    GROESTL_COLUMN(x,y, 0,  2,  6, 10, 14,  1,  5,  9, 13, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
+    GROESTL_COLUMN(x,y, 2,  4,  8, 12,  0,  3,  7, 11, 15, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
+    GROESTL_COLUMN(x,y, 4,  6, 10, 14,  2,  5,  9, 13,  1, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
+    GROESTL_COLUMN(x,y, 6,  8, 12,  0,  4,  7, 11, 15,  3, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
+    GROESTL_COLUMN(x,y, 8, 10, 14,  2,  6,  9, 13,  1,  5, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
+    GROESTL_COLUMN(x,y,10, 12,  0,  4,  8, 11, 15,  3,  7, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
+    GROESTL_COLUMN(x,y,12, 14,  2,  6, 10, 13,  1,  5,  9, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
+    GROESTL_COLUMN(x,y,14,  0,  4,  8, 12, 15,  3,  7, 11, temp_v1, temp_v2, temp_upper_value, temp_lower_value, temp);
 }
 
 __device__ void cn_groestl_F512(uint32_t * __restrict__ h, const uint32_t * __restrict__ m)
 {
-	int i;
-	uint32_t Ptmp[2*GROESTL_COLS512];
-	uint32_t Qtmp[2*GROESTL_COLS512];
-	uint32_t y[2*GROESTL_COLS512];
-	uint32_t z[2*GROESTL_COLS512];
+    int i;
+    uint32_t Ptmp[2*GROESTL_COLS512];
+    uint32_t Qtmp[2*GROESTL_COLS512];
+    uint32_t y[2*GROESTL_COLS512];
+    uint32_t z[2*GROESTL_COLS512];
 
-	for (i = 0; i < 2*GROESTL_COLS512; i++) 
-	{
-		z[i] = m[i];
-		Ptmp[i] = h[i]^m[i];
-	}
+    for (i = 0; i < 2*GROESTL_COLS512; i++) 
+    {
+        z[i] = m[i];
+        Ptmp[i] = h[i]^m[i];
+    }
 
-	cn_groestl_RND512Q((uint8_t*)z, y, 0x00000000);
-	cn_groestl_RND512Q((uint8_t*)y, z, 0x01000000);
-	cn_groestl_RND512Q((uint8_t*)z, y, 0x02000000);
-	cn_groestl_RND512Q((uint8_t*)y, z, 0x03000000);
-	cn_groestl_RND512Q((uint8_t*)z, y, 0x04000000);
-	cn_groestl_RND512Q((uint8_t*)y, z, 0x05000000);
-	cn_groestl_RND512Q((uint8_t*)z, y, 0x06000000);
-	cn_groestl_RND512Q((uint8_t*)y, z, 0x07000000);
-	cn_groestl_RND512Q((uint8_t*)z, y, 0x08000000);
-	cn_groestl_RND512Q((uint8_t*)y, Qtmp, 0x09000000);
+    cn_groestl_RND512Q((uint8_t*)z, y, 0x00000000);
+    cn_groestl_RND512Q((uint8_t*)y, z, 0x01000000);
+    cn_groestl_RND512Q((uint8_t*)z, y, 0x02000000);
+    cn_groestl_RND512Q((uint8_t*)y, z, 0x03000000);
+    cn_groestl_RND512Q((uint8_t*)z, y, 0x04000000);
+    cn_groestl_RND512Q((uint8_t*)y, z, 0x05000000);
+    cn_groestl_RND512Q((uint8_t*)z, y, 0x06000000);
+    cn_groestl_RND512Q((uint8_t*)y, z, 0x07000000);
+    cn_groestl_RND512Q((uint8_t*)z, y, 0x08000000);
+    cn_groestl_RND512Q((uint8_t*)y, Qtmp, 0x09000000);
 
-	cn_groestl_RND512P((uint8_t*)Ptmp, y, 0x00000000);
-	cn_groestl_RND512P((uint8_t*)y, z, 0x00000001);
-	cn_groestl_RND512P((uint8_t*)z, y, 0x00000002);
-	cn_groestl_RND512P((uint8_t*)y, z, 0x00000003);
-	cn_groestl_RND512P((uint8_t*)z, y, 0x00000004);
-	cn_groestl_RND512P((uint8_t*)y, z, 0x00000005);
-	cn_groestl_RND512P((uint8_t*)z, y, 0x00000006);
-	cn_groestl_RND512P((uint8_t*)y, z, 0x00000007);
-	cn_groestl_RND512P((uint8_t*)z, y, 0x00000008);
-	cn_groestl_RND512P((uint8_t*)y, Ptmp, 0x00000009);
+    cn_groestl_RND512P((uint8_t*)Ptmp, y, 0x00000000);
+    cn_groestl_RND512P((uint8_t*)y, z, 0x00000001);
+    cn_groestl_RND512P((uint8_t*)z, y, 0x00000002);
+    cn_groestl_RND512P((uint8_t*)y, z, 0x00000003);
+    cn_groestl_RND512P((uint8_t*)z, y, 0x00000004);
+    cn_groestl_RND512P((uint8_t*)y, z, 0x00000005);
+    cn_groestl_RND512P((uint8_t*)z, y, 0x00000006);
+    cn_groestl_RND512P((uint8_t*)y, z, 0x00000007);
+    cn_groestl_RND512P((uint8_t*)z, y, 0x00000008);
+    cn_groestl_RND512P((uint8_t*)y, Ptmp, 0x00000009);
 
-	for (i = 0; i < 2*GROESTL_COLS512; i++)
-		h[i] ^= Ptmp[i]^Qtmp[i];
+    for (i = 0; i < 2*GROESTL_COLS512; i++)
+        h[i] ^= Ptmp[i]^Qtmp[i];
 }
 
 __device__ void cn_groestl_outputtransformation(groestlHashState *ctx)
 {
-	int j;
-	uint32_t temp[2*GROESTL_COLS512];
-	uint32_t y[2*GROESTL_COLS512];
-	uint32_t z[2*GROESTL_COLS512];
+    int j;
+    uint32_t temp[2*GROESTL_COLS512];
+    uint32_t y[2*GROESTL_COLS512];
+    uint32_t z[2*GROESTL_COLS512];
 
-	for (j = 0; j < 2*GROESTL_COLS512; j++)
-		temp[j] = ctx->chaining[j];
+    for (j = 0; j < 2*GROESTL_COLS512; j++)
+        temp[j] = ctx->chaining[j];
 
-	cn_groestl_RND512P((uint8_t*)temp, y, 0x00000000);
-	cn_groestl_RND512P((uint8_t*)y, z, 0x00000001);
-	cn_groestl_RND512P((uint8_t*)z, y, 0x00000002);
-	cn_groestl_RND512P((uint8_t*)y, z, 0x00000003);
-	cn_groestl_RND512P((uint8_t*)z, y, 0x00000004);
-	cn_groestl_RND512P((uint8_t*)y, z, 0x00000005);
-	cn_groestl_RND512P((uint8_t*)z, y, 0x00000006);
-	cn_groestl_RND512P((uint8_t*)y, z, 0x00000007);
-	cn_groestl_RND512P((uint8_t*)z, y, 0x00000008);
-	cn_groestl_RND512P((uint8_t*)y, temp, 0x00000009);
+    cn_groestl_RND512P((uint8_t*)temp, y, 0x00000000);
+    cn_groestl_RND512P((uint8_t*)y, z, 0x00000001);
+    cn_groestl_RND512P((uint8_t*)z, y, 0x00000002);
+    cn_groestl_RND512P((uint8_t*)y, z, 0x00000003);
+    cn_groestl_RND512P((uint8_t*)z, y, 0x00000004);
+    cn_groestl_RND512P((uint8_t*)y, z, 0x00000005);
+    cn_groestl_RND512P((uint8_t*)z, y, 0x00000006);
+    cn_groestl_RND512P((uint8_t*)y, z, 0x00000007);
+    cn_groestl_RND512P((uint8_t*)z, y, 0x00000008);
+    cn_groestl_RND512P((uint8_t*)y, temp, 0x00000009);
 
-	for (j = 0; j < 2*GROESTL_COLS512; j++)
-		ctx->chaining[j] ^= temp[j];
+    for (j = 0; j < 2*GROESTL_COLS512; j++)
+        ctx->chaining[j] ^= temp[j];
 }
 
 __device__ void cn_groestl_transform(groestlHashState * __restrict__ ctx,
-	const uint8_t * __restrict__ input, int msglen)
+    const uint8_t * __restrict__ input, int msglen)
 {
-	for (; msglen >= GROESTL_SIZE512; msglen -= GROESTL_SIZE512, input += GROESTL_SIZE512) 
-	{
-		cn_groestl_F512(ctx->chaining,(uint32_t*)input);
-		ctx->block_counter1++;
+    for (; msglen >= GROESTL_SIZE512; msglen -= GROESTL_SIZE512, input += GROESTL_SIZE512) 
+    {
+        cn_groestl_F512(ctx->chaining,(uint32_t*)input);
+        ctx->block_counter1++;
 
-		if (ctx->block_counter1 == 0) 
-			ctx->block_counter2++;
-	}
+        if (ctx->block_counter1 == 0) 
+            ctx->block_counter2++;
+    }
 }
 
 __device__ void cn_groestl_final(groestlHashState*  __restrict__ ctx, 
-	BitSequence* __restrict__  output)
+    BitSequence* __restrict__  output)
 {
-	int i, j = 0, hashbytelen = GROESTL_HASH_BIT_LEN/8;
-	uint8_t *s = (BitSequence*)ctx->chaining;
+    int i, j = 0, hashbytelen = GROESTL_HASH_BIT_LEN/8;
+    uint8_t *s = (BitSequence*)ctx->chaining;
 
-	if (ctx->bits_in_last_byte) 
-	{
-		ctx->buffer[(int)ctx->buf_ptr-1] &= ((1<<ctx->bits_in_last_byte)-1)<<(8-ctx->bits_in_last_byte);
-		ctx->buffer[(int)ctx->buf_ptr-1] ^= 0x1<<(7-ctx->bits_in_last_byte);
-		ctx->bits_in_last_byte = 0;
-	}
-	else
-	{
-		ctx->buffer[(int)ctx->buf_ptr++] = 0x80;
-	}
+    if (ctx->bits_in_last_byte) 
+    {
+        ctx->buffer[(int)ctx->buf_ptr-1] &= ((1<<ctx->bits_in_last_byte)-1)<<(8-ctx->bits_in_last_byte);
+        ctx->buffer[(int)ctx->buf_ptr-1] ^= 0x1<<(7-ctx->bits_in_last_byte);
+        ctx->bits_in_last_byte = 0;
+    }
+    else
+    {
+        ctx->buffer[(int)ctx->buf_ptr++] = 0x80;
+    }
 
-	if (ctx->buf_ptr > GROESTL_SIZE512-GROESTL_LENGTHFIELDLEN) 
-	{
-		while (ctx->buf_ptr < GROESTL_SIZE512) 
-			ctx->buffer[(int)ctx->buf_ptr++] = 0;
+    if (ctx->buf_ptr > GROESTL_SIZE512-GROESTL_LENGTHFIELDLEN) 
+    {
+        while (ctx->buf_ptr < GROESTL_SIZE512) 
+            ctx->buffer[(int)ctx->buf_ptr++] = 0;
 
-		cn_groestl_transform(ctx, ctx->buffer, GROESTL_SIZE512);
-		ctx->buf_ptr = 0;
-	}
+        cn_groestl_transform(ctx, ctx->buffer, GROESTL_SIZE512);
+        ctx->buf_ptr = 0;
+    }
 
-	while (ctx->buf_ptr < GROESTL_SIZE512-GROESTL_LENGTHFIELDLEN)
-		ctx->buffer[(int)ctx->buf_ptr++] = 0;
+    while (ctx->buf_ptr < GROESTL_SIZE512-GROESTL_LENGTHFIELDLEN)
+        ctx->buffer[(int)ctx->buf_ptr++] = 0;
 
-	ctx->block_counter1++;
-	if (ctx->block_counter1 == 0)
-		ctx->block_counter2++;
-	ctx->buf_ptr = GROESTL_SIZE512;
+    ctx->block_counter1++;
+    if (ctx->block_counter1 == 0)
+        ctx->block_counter2++;
+    ctx->buf_ptr = GROESTL_SIZE512;
 
-	while (ctx->buf_ptr > GROESTL_SIZE512-(int)sizeof(uint32_t))
-	{
-		ctx->buffer[(int)--ctx->buf_ptr] = (uint8_t)ctx->block_counter1;
-		ctx->block_counter1 >>= 8;
-	}
-	while (ctx->buf_ptr > GROESTL_SIZE512-GROESTL_LENGTHFIELDLEN)
-	{
-		ctx->buffer[(int)--ctx->buf_ptr] = (uint8_t)ctx->block_counter2;
-		ctx->block_counter2 >>= 8;
-	}
-	cn_groestl_transform(ctx, ctx->buffer, GROESTL_SIZE512);
-	cn_groestl_outputtransformation(ctx);
+    while (ctx->buf_ptr > GROESTL_SIZE512-(int)sizeof(uint32_t))
+    {
+        ctx->buffer[(int)--ctx->buf_ptr] = (uint8_t)ctx->block_counter1;
+        ctx->block_counter1 >>= 8;
+    }
+    while (ctx->buf_ptr > GROESTL_SIZE512-GROESTL_LENGTHFIELDLEN)
+    {
+        ctx->buffer[(int)--ctx->buf_ptr] = (uint8_t)ctx->block_counter2;
+        ctx->block_counter2 >>= 8;
+    }
+    cn_groestl_transform(ctx, ctx->buffer, GROESTL_SIZE512);
+    cn_groestl_outputtransformation(ctx);
 
-	for (i = GROESTL_SIZE512-hashbytelen; i < GROESTL_SIZE512; i++,j++)
-		output[j] = s[i];
+    for (i = GROESTL_SIZE512-hashbytelen; i < GROESTL_SIZE512; i++,j++)
+        output[j] = s[i];
 
-	for (i = 0; i < GROESTL_COLS512; i++)
-		ctx->chaining[i] = 0;
-	for (i = 0; i < GROESTL_SIZE512; i++)
-		ctx->buffer[i] = 0;
+    for (i = 0; i < GROESTL_COLS512; i++)
+        ctx->chaining[i] = 0;
+    for (i = 0; i < GROESTL_SIZE512; i++)
+        ctx->buffer[i] = 0;
 }
 
 __device__ void cn_groestl_update(groestlHashState* __restrict__ ctx,
-	const BitSequence* __restrict__ input, DataLength databitlen)
+    const BitSequence* __restrict__ input, DataLength databitlen)
 {
-	int index = 0;
-	int msglen = (int)(databitlen/8);
-	int rem = (int)(databitlen%8);
+    int index = 0;
+    int msglen = (int)(databitlen/8);
+    int rem = (int)(databitlen%8);
 
-	if (ctx->buf_ptr) 
-	{
-		while (ctx->buf_ptr < GROESTL_SIZE512 && index < msglen)
-			ctx->buffer[(int)ctx->buf_ptr++] = input[index++];
+    if (ctx->buf_ptr) 
+    {
+        while (ctx->buf_ptr < GROESTL_SIZE512 && index < msglen)
+            ctx->buffer[(int)ctx->buf_ptr++] = input[index++];
 
-		if (ctx->buf_ptr < GROESTL_SIZE512) 
-		{
-			if (rem) 
-			{
-				ctx->bits_in_last_byte = rem;
-				ctx->buffer[(int)ctx->buf_ptr++] = input[index];
-			}
-			return;
-		}
+        if (ctx->buf_ptr < GROESTL_SIZE512) 
+        {
+            if (rem) 
+            {
+                ctx->bits_in_last_byte = rem;
+                ctx->buffer[(int)ctx->buf_ptr++] = input[index];
+            }
+            return;
+        }
 
-		ctx->buf_ptr = 0;
-		cn_groestl_transform(ctx, ctx->buffer, GROESTL_SIZE512);
-	}
+        ctx->buf_ptr = 0;
+        cn_groestl_transform(ctx, ctx->buffer, GROESTL_SIZE512);
+    }
 
-	cn_groestl_transform(ctx, input+index, msglen-index);
-	index += ((msglen-index)/GROESTL_SIZE512)*GROESTL_SIZE512;
+    cn_groestl_transform(ctx, input+index, msglen-index);
+    index += ((msglen-index)/GROESTL_SIZE512)*GROESTL_SIZE512;
 
-	while (index < msglen)
-		ctx->buffer[(int)ctx->buf_ptr++] = input[index++];
+    while (index < msglen)
+        ctx->buffer[(int)ctx->buf_ptr++] = input[index++];
 
-	if (rem)
-	{
-		ctx->bits_in_last_byte = rem;
-		ctx->buffer[(int)ctx->buf_ptr++] = input[index];
-	}
+    if (rem)
+    {
+        ctx->bits_in_last_byte = rem;
+        ctx->buffer[(int)ctx->buf_ptr++] = input[index];
+    }
 }
 
 __device__ void cn_groestl_init(groestlHashState* ctx)
 {
-	int i = 0;
+    int i = 0;
 
-	for(;i<(GROESTL_SIZE512/sizeof(uint32_t));i++)
-		ctx->chaining[i] = 0;
+    for(;i<(GROESTL_SIZE512/sizeof(uint32_t));i++)
+        ctx->chaining[i] = 0;
 
-	ctx->chaining[2*GROESTL_COLS512-1] = u32BIG((uint32_t)GROESTL_HASH_BIT_LEN);
-	ctx->buf_ptr = 0;
-	ctx->block_counter1 = 0;
-	ctx->block_counter2 = 0;
-	ctx->bits_in_last_byte = 0;
+    ctx->chaining[2*GROESTL_COLS512-1] = u32BIG((uint32_t)GROESTL_HASH_BIT_LEN);
+    ctx->buf_ptr = 0;
+    ctx->block_counter1 = 0;
+    ctx->block_counter2 = 0;
+    ctx->bits_in_last_byte = 0;
 }
 
 __device__ void cn_groestl(const BitSequence * __restrict__ data, DataLength len, BitSequence * __restrict__ hashval)
 {
-	DataLength databitlen = len << 3;
-	groestlHashState context;
+    DataLength databitlen = len << 3;
+    groestlHashState context;
 
-	cn_groestl_init(&context);
-	cn_groestl_update(&context, data, databitlen);
-	cn_groestl_final(&context, hashval);
+    cn_groestl_init(&context);
+    cn_groestl_update(&context, data, databitlen);
+    cn_groestl_final(&context, hashval);
 }
