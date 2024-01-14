@@ -144,15 +144,9 @@ __device__ void blake2b_512_process_single_block(uint64_t *h, const uint64_t* m,
 	h[7] = v[7] ^ v[15] ^ Blake2b_IV::iv7;
 }
 
-template<uint32_t in_len> struct M_Mask { enum : uint64_t { value = uint64_t(-1) >> (64 - in_len * 8) }; };
-template<> struct M_Mask<0> { enum : uint64_t { value = 0 }; };
-
-template<uint32_t in_len, uint32_t out_len>
-__device__ void blake2b_512_process_double_block(uint64_t *out, uint64_t* m, const uint64_t* in)
+template<uint32_t out_len>
+__device__ void blake2b_512_process_double_block(uint64_t *out, uint64_t* m, const uint64_t* in, uint32_t in_len)
 {
-	static_assert(in_len > 128, "Double block must be larger than 128 bytes");
-	static_assert(in_len <= 256, "Double block can't be larger than 256 bytes");
-
 	uint64_t v[16] =
 	{
 		Blake2b_IV::iv0 ^ (0x01010000ul | out_len), Blake2b_IV::iv1, Blake2b_IV::iv2, Blake2b_IV::iv3, Blake2b_IV::iv4      , Blake2b_IV::iv5, Blake2b_IV::iv6, Blake2b_IV::iv7,
@@ -197,7 +191,7 @@ __device__ void blake2b_512_process_double_block(uint64_t *out, uint64_t* m, con
 	m[15] = (in_len > 248) ? in[31] : 0;
 
 	if (in_len % sizeof(uint64_t))
-		m[(in_len - 128) / sizeof(uint64_t)] &= M_Mask<in_len % sizeof(uint64_t)>::value;
+		m[(in_len - 128) / sizeof(uint64_t)] &= uint64_t(-1) >> (64 - (in_len % sizeof(uint64_t)) * 8);
 
 	BLAKE2B_ROUNDS();
 
@@ -260,6 +254,32 @@ __global__ void blake2b_initial_hash(void *out, const void* blockTemplate, uint3
 	t[7] = hash[7];
 }
 
+__global__ void blake2b_initial_hash_double(void* out, const void* blockTemplate, uint32_t blockTemplate_len, uint32_t start_nonce)
+{
+	const uint32_t global_index = blockIdx.x * blockDim.x + threadIdx.x;
+	const uint64_t* p = (const uint64_t*)blockTemplate;
+
+	uint64_t m[16] = { p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15] };
+
+	const uint64_t nonce = start_nonce + global_index;
+	m[4] = (m[4] & (uint64_t(-1) >> 8)) | (nonce << 56);
+	m[5] = (m[5] & (uint64_t(-1) << 24)) | (nonce >> 8);
+
+	uint64_t hash[8];
+
+	blake2b_512_process_double_block<64>(hash, m, p, blockTemplate_len);
+
+	uint64_t* t = ((uint64_t*)out) + global_index * 8;
+	t[0] = hash[0];
+	t[1] = hash[1];
+	t[2] = hash[2];
+	t[3] = hash[3];
+	t[4] = hash[4];
+	t[5] = hash[5];
+	t[6] = hash[6];
+	t[7] = hash[7];
+}
+
 template<uint32_t registers_len, uint32_t registers_stride, uint32_t out_len>
 __global__ void blake2b_hash_registers(void *out, const void* in)
 {
@@ -268,5 +288,5 @@ __global__ void blake2b_hash_registers(void *out, const void* in)
 	uint64_t* h = ((uint64_t*) out) + global_index * (out_len / sizeof(uint64_t));
 
 	uint64_t m[16] = { p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15] };
-	blake2b_512_process_double_block<registers_len, out_len>(h, m, p);
+	blake2b_512_process_double_block<out_len>(h, m, p, registers_len);
 }
