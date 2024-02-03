@@ -24,7 +24,7 @@ endif()
 # Kepler GPUs are only supported with CUDA < 11.0
 if (CUDA_VERSION VERSION_LESS 11.0)
     list(APPEND DEFAULT_CUDA_ARCH "30")
-else()
+elseif(CUDA_VERSION VERSION_LESS 12.0) # Ada Lovelace GPUs don't support CUDA < 8.9
     list(APPEND DEFAULT_CUDA_ARCH "35")
 endif()
 
@@ -47,6 +47,7 @@ endif()
 if (NOT CUDA_VERSION VERSION_LESS 11.0)
     list(APPEND DEFAULT_CUDA_ARCH "80")
 endif()
+
 list(SORT DEFAULT_CUDA_ARCH)
 
 set(CUDA_ARCH "${DEFAULT_CUDA_ARCH}" CACHE STRING "Set GPU architecture (semicolon separated list, e.g. '-DCUDA_ARCH=20;35;60')")
@@ -65,6 +66,14 @@ foreach(CUDA_ARCH_ELEM ${CUDA_ARCH})
         message(FATAL_ERROR "Unsupported CUDA architecture '${CUDA_ARCH_ELEM}' specified.")
     endif()
 
+    if (CUDA_VERSION VERSION_LESS 11.8)
+        if(NOT ${CUDA_ARCH_ELEM} LESS 89)
+            message("${MSG_CUDA_MAP}")
+            message(FATAL_ERROR "Unsupported CUDA architecture '${CUDA_ARCH_ELEM}' specified. "
+                                "Use CUDA v11.8 minimum, Ada Lovelace (89) was added at v11.8.")
+        endif()
+    endif()
+
     if (NOT CUDA_VERSION VERSION_LESS 11.0)
         if(${CUDA_ARCH_ELEM} LESS 35)
             message("${MSG_CUDA_MAP}")
@@ -78,7 +87,7 @@ foreach(CUDA_ARCH_ELEM ${CUDA_ARCH})
                                 "Use CUDA v11.x minimum, Ampere (80) was added at v11.")
         endif()
     endif()
-
+	
     if (CUDA_VERSION VERSION_LESS 10.0)
         if(NOT ${CUDA_ARCH_ELEM} LESS 75)
             message("${MSG_CUDA_MAP}")
