@@ -1,3 +1,8 @@
+# v6.21.0
+- [#167](https://github.com/xmrig/xmrig-cuda/pull/167) Removed deprecated AstroBWTv1 and v2.
+- [#176](https://github.com/xmrig/xmrig-cuda/pull/176) Added CUDA 12 support.
+- [#191](https://github.com/xmrig/xmrig-cuda/pull/191) Fixed Zephyr mining.
+
 # v6.17.0
 - [#157](https://github.com/xmrig/xmrig-cuda/pull/157) Added Dero HE (`astrobwt/v2`) support.
 
