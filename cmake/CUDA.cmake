@@ -24,7 +24,7 @@ endif()
 # Kepler GPUs are only supported with CUDA < 11.0
 if (CUDA_VERSION VERSION_LESS 11.0)
     list(APPEND DEFAULT_CUDA_ARCH "30")
-else()
+elseif (CUDA_VERSION VERSION_LESS 12.0)
     list(APPEND DEFAULT_CUDA_ARCH "35")
 endif()
 
@@ -46,6 +46,18 @@ endif()
 # add Ampere support for CUDA >= 11.0
 if (NOT CUDA_VERSION VERSION_LESS 11.0)
     list(APPEND DEFAULT_CUDA_ARCH "80")
+endif()
+
+if (NOT CUDA_VERSION VERSION_LESS 11.1)
+    list(APPEND DEFAULT_CUDA_ARCH "86")
+endif()
+
+if (NOT CUDA_VERSION VERSION_LESS 11.5)
+    list(APPEND DEFAULT_CUDA_ARCH "87")
+endif()
+
+if (NOT CUDA_VERSION VERSION_LESS 11.8)
+    list(APPEND DEFAULT_CUDA_ARCH "90")
 endif()
 list(SORT DEFAULT_CUDA_ARCH)
 
@@ -225,21 +237,6 @@ else()
     set(CUDA_RANDOMX_SOURCES "")
 endif()
 
-if (WITH_ASTROBWT)
-    set(CUDA_ASTROBWT_SOURCES
-        src/AstroBWT/dero/AstroBWT.cu
-        src/AstroBWT/dero/BWT.h
-        src/AstroBWT/dero/salsa20.h
-        src/AstroBWT/dero/sha3.h
-        src/AstroBWT/dero_he/AstroBWT_v2.cu
-        src/AstroBWT/dero_he/BWT.h
-        src/AstroBWT/dero_he/salsa20.h
-        src/AstroBWT/dero_he/sha3.h
-    )
-else()
-    set(CUDA_ASTROBWT_SOURCES "")
-endif()
-
 if (WITH_KAWPOW AND WITH_DRIVER_API)
     set(CUDA_KAWPOW_SOURCES
         src/KawPow/raven/CudaKawPow_gen.cpp
@@ -264,7 +261,6 @@ set(CUDA_SOURCES
     src/cuda_keccak.hpp
     src/cuda_skein.hpp
     ${CUDA_RANDOMX_SOURCES}
-    ${CUDA_ASTROBWT_SOURCES}
     ${CUDA_KAWPOW_SOURCES}
 )
 
