@@ -100,12 +100,13 @@ struct AgentScan
     //---------------------------------------------------------------------
 
     // The input value type
-    typedef typename std::iterator_traits<InputIteratorT>::value_type InputT;
+    using InputT = typename std::iterator_traits<InputIteratorT>::value_type;
 
-    // The output value type
-    typedef typename If<(Equals<typename std::iterator_traits<OutputIteratorT>::value_type, void>::VALUE),  // OutputT =  (if output iterator's value type is void) ?
-        typename std::iterator_traits<InputIteratorT>::value_type,                                          // ... then the input iterator's value type,
-        typename std::iterator_traits<OutputIteratorT>::value_type>::Type OutputT;                          // ... else the output iterator's value type
+    // The output value type -- used as the intermediate accumulator
+    // Per https://wg21.link/P0571, use InitValueT if provided, otherwise the
+    // input iterator's value type.
+    using OutputT =
+      typename If<Equals<InitValueT, NullType>::VALUE, InputT, InitValueT>::Type;
 
     // Tile status descriptor interface type
     typedef ScanTileState<OutputT> ScanTileStateT;
@@ -167,11 +168,11 @@ struct AgentScan
         typename BlockLoadT::TempStorage    load;       // Smem needed for tile loading
         typename BlockStoreT::TempStorage   store;      // Smem needed for tile storing
 
-        struct
+        struct ScanStorage
         {
             typename TilePrefixCallbackOpT::TempStorage  prefix;     // Smem needed for cooperative prefix callback
             typename BlockScanT::TempStorage             scan;       // Smem needed for tile scanning
-        };
+        } scan_storage;
     };
 
     // Alias wrapper allowing storage to be unioned
@@ -204,7 +205,7 @@ struct AgentScan
         OutputT             &block_aggregate,
         Int2Type<false>     /*is_inclusive*/)
     {
-        BlockScanT(temp_storage.scan).ExclusiveScan(items, items, init_value, scan_op, block_aggregate);
+        BlockScanT(temp_storage.scan_storage.scan).ExclusiveScan(items, items, init_value, scan_op, block_aggregate);
         block_aggregate = scan_op(init_value, block_aggregate);
     }
 
@@ -220,7 +221,7 @@ struct AgentScan
         OutputT             &block_aggregate,
         Int2Type<true>      /*is_inclusive*/)
     {
-        BlockScanT(temp_storage.scan).InclusiveScan(items, items, scan_op, block_aggregate);
+        BlockScanT(temp_storage.scan_storage.scan).InclusiveScan(items, items, scan_op, block_aggregate);
     }
 
 
@@ -235,7 +236,7 @@ struct AgentScan
         PrefixCallback      &prefix_op,
         Int2Type<false>     /*is_inclusive*/)
     {
-        BlockScanT(temp_storage.scan).ExclusiveScan(items, items, scan_op, prefix_op);
+        BlockScanT(temp_storage.scan_storage.scan).ExclusiveScan(items, items, scan_op, prefix_op);
     }
 
 
@@ -250,7 +251,7 @@ struct AgentScan
         PrefixCallback      &prefix_op,
         Int2Type<true>      /*is_inclusive*/)
     {
-        BlockScanT(temp_storage.scan).InclusiveScan(items, items, scan_op, prefix_op);
+        BlockScanT(temp_storage.scan_storage.scan).InclusiveScan(items, items, scan_op, prefix_op);
     }
 
 
@@ -293,9 +294,19 @@ struct AgentScan
         OutputT items[ITEMS_PER_THREAD];
 
         if (IS_LAST_TILE)
-            BlockLoadT(temp_storage.load).Load(d_in + tile_offset, items, num_remaining);
+        {
+            // Fill last element with the first element because collectives are
+            // not suffix guarded.
+            BlockLoadT(temp_storage.load)
+              .Load(d_in + tile_offset,
+                    items,
+                    num_remaining,
+                    *(d_in + tile_offset));
+        }
         else
+        {
             BlockLoadT(temp_storage.load).Load(d_in + tile_offset, items);
+        }
 
         CTA_SYNC();
 
@@ -311,7 +322,7 @@ struct AgentScan
         else
         {
             // Scan non-first tile
-            TilePrefixCallbackOpT prefix_op(tile_state, temp_storage.prefix, scan_op, tile_idx);
+            TilePrefixCallbackOpT prefix_op(tile_state, temp_storage.scan_storage.prefix, scan_op, tile_idx);
             ScanTile(items, scan_op, prefix_op, Int2Type<IS_INCLUSIVE>());
         }
 
@@ -329,7 +340,7 @@ struct AgentScan
      * Scan tiles of items as part of a dynamic chained scan
      */
     __device__ __forceinline__ void ConsumeRange(
-        int                 num_items,          ///< Total number of input items
+        OffsetT             num_items,          ///< Total number of input items
         ScanTileStateT&     tile_state,         ///< Global tile state descriptor
         int                 start_tile)         ///< The starting tile for the current grid
     {
@@ -370,9 +381,19 @@ struct AgentScan
         OutputT items[ITEMS_PER_THREAD];
 
         if (IS_LAST_TILE)
-            BlockLoadT(temp_storage.load).Load(d_in + tile_offset, items, valid_items);
+        {
+            // Fill last element with the first element because collectives are
+            // not suffix guarded.
+            BlockLoadT(temp_storage.load)
+              .Load(d_in + tile_offset,
+                    items,
+                    valid_items,
+                    *(d_in + tile_offset));
+        }
         else
+        {
             BlockLoadT(temp_storage.load).Load(d_in + tile_offset, items);
+        }
 
         CTA_SYNC();
 
