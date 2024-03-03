@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.0)
 project(xmrig-cuda)
 include(cmake/CUDA-Version.cmake)
 
@@ -14,7 +14,7 @@ option(WITH_CN_FEMTO   "Enable CryptoNight-UPX2 algorithm" ON)
 option(WITH_ARGON2     "Enable Argon2 algorithms family" OFF) #unsupported
 
 if (CUDA_VERSION VERSION_LESS 9.0)
-    message(STATUS "CUDA ${CUDA_VERSION}: RandomX and KawPow disabled, they do not work with old CUDA")
+    message(STATUS "CUDA ${CUDA_VERSION}: RandomX and KawPow disabled, they do not work with CUDA < 9.0")
     option(WITH_RANDOMX  "Enable RandomX algorithms family" OFF)
     option(WITH_KAWPOW   "Enable KawPow algorithms family" OFF)
 else()
