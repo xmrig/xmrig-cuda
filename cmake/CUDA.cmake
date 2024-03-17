@@ -179,6 +179,10 @@ elseif("${CUDA_COMPILER}" STREQUAL "nvcc")
 
     set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} "-Wno-deprecated-gpu-targets")
 
+    if (NOT CUDA_VERSION VERSION_LESS 11.3)
+        set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} "--threads 0")
+    endif()
+
     foreach(CUDA_ARCH_ELEM ${CUDA_ARCH})
         # set flags to create device code for the given architecture
         if("${CUDA_ARCH_ELEM}" STREQUAL "21")
