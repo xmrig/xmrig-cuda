@@ -37,4 +37,4 @@ Path to plugin can be specified via `loader` option:
 Due of restrictions of JSON format directory separator must be written in Linux style `/` or escaped `\\`.
 
 ## Linux usage
-Linux usage almost same with Windows expept we don't provide binaries and you must build the plugin form source and name of plugin is different **`libxmrig-cuda.so`**.
+Linux usage almost same with Windows except we don't provide binaries and you must build the plugin form source and name of plugin is different **`libxmrig-cuda.so`**.
