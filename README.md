@@ -1,16 +1,16 @@
 # xmrig-cuda
-This repository is NVIDIA CUDA plugin for XMRig miner v4.5+ and it adds support for NVIDIA GPUs in XMRig miner.
+This repository contains the CUDA plugin for the XMRig miner, which provides support for NVIDIA GPUs.
 
-Main reasons why this plugin is separated project is:
-1. CUDA support is optional, not all users need it, but it is very heavy.
-2. CUDA has very strict compiler version requirements, it may conflicts with CPU mining code, for example now possible build the miner with gcc on Windows (CUDA works only with MSVC).
+This plugin is a separate project because of the main reasons listed below:
+1. Not all users require CUDA support, and it is an optional feature.
+2. CUDA has strict compiler version requirements that may conflict with the CPU mining code. For example, CUDA doesn't support GCC on Windows.
 
 
-## Windows usage
+## Windows
 
-* [Download](https://github.com/xmrig/xmrig-cuda/releases) plugin, you must choose CUDA version, usually it recent version (CUDA 10.1), but builds with older CUDA version also provided, alternative you can build the plugin from source.
+* To [download](https://github.com/xmrig/xmrig-cuda/releases) the plugin, you must choose the appropriate CUDA version. Generally, the latest version (12.4) is all you need, unless you have very old GPUs. Windows builds are available for every major CUDA release. Alternatively, you can [build](https://xmrig.com/docs/miner/build/windows) the plugin from the source.
 * Place **`xmrig-cuda.dll`** and other dll files near to **`xmrig.exe`**.
-* Edit **`config.json`** to enable CUDA support.
+* Edit **`config.json`** enable the plugin.
 ```
 {
    ...
@@ -22,7 +22,7 @@ Main reasons why this plugin is separated project is:
 }
 ```
 ### Advanced
-Path to plugin can be specified via `loader` option:
+You can specify the path to the plugin using the `loader` option.
 ```
 {
    ...
@@ -34,7 +34,10 @@ Path to plugin can be specified via `loader` option:
    ...
 }
 ```
-Due of restrictions of JSON format directory separator must be written in Linux style `/` or escaped `\\`.
+Due to JSON format restrictions, the directory separator must be written in Linux style `/` or escaped `\\`.
 
-## Linux usage
-Linux usage almost same with Windows except we don't provide binaries and you must build the plugin form source and name of plugin is different **`libxmrig-cuda.so`**.
+## Linux
+Linux usage is almost the same as Windows except we don't provide binaries and you must build the plugin from the source and the name of the plugin is different **`libxmrig-cuda.so`**.
+
+## macOS
+CUDA no longer supports macOS, which means that the plugin also does not support it.
