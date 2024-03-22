@@ -1,3 +1,7 @@
+# v6.21.1
+- The binary downloads now only support the latest version of each major CUDA release.
+- Improved build speed with CUDA 11.3 or higher.
+
 # v6.21.0
 - [#167](https://github.com/xmrig/xmrig-cuda/pull/167) Removed deprecated AstroBWTv1 and v2.
 - [#176](https://github.com/xmrig/xmrig-cuda/pull/176) Added CUDA 12 support.
