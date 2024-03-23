@@ -22,14 +22,14 @@
 #define APP_ID        "xmrig-cuda"
 #define APP_NAME      "XMRig"
 #define APP_DESC      "XMRig CUDA plugin"
-#define APP_VERSION   "6.21.1"
+#define APP_VERSION   "6.21.2-dev"
 #define APP_DOMAIN    "xmrig.com"
 #define APP_SITE      "www.xmrig.com"
 #define APP_COPYRIGHT "Copyright (C) 2016-2024 xmrig.com"
 
 #define APP_VER_MAJOR  6
 #define APP_VER_MINOR  21
-#define APP_VER_PATCH  1
+#define APP_VER_PATCH  2
 
 #define API_VERSION    4
 
