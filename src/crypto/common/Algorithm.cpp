@@ -43,7 +43,7 @@ xmrig_cuda::Algorithm::Id xmrig_cuda::Algorithm::parse(uint32_t id)
         CN_UPX2,
 #       endif
 #       ifdef XMRIG_ALGO_RANDOMX
-        RX_0, RX_WOW, RX_ARQ, RX_GRAFT, RX_SFX, RX_KEVA,
+        RX_0, RX_WOW, RX_ARQ, RX_GRAFT, RX_SFX, RX_KEVA, RX_LOZZ,
 #       endif
 #       ifdef XMRIG_ALGO_ARGON2
         AR2_CHUKWA, AR2_CHUKWA_V2, AR2_WRKZ,

@@ -204,6 +204,10 @@ bool rxHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *resco
             RandomX_Graft::hash(ctx, startNonce, target, rescount, resnonce, ctx->rx_batch_size);
             break;
 
+        case Algorithm::RX_LOZZ:
+            RandomX_Lozzax::hash(ctx, startNonce, target, rescount, resnonce, ctx->rx_batch_size);
+            break;
+
         default:
             throw std::runtime_error(kUnsupportedAlgorithm);
         }

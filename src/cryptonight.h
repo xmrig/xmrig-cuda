@@ -126,6 +126,7 @@ namespace RandomX_Monero  { void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t ta
 namespace RandomX_Wownero { void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce, uint32_t batch_size); }
 namespace RandomX_Keva    { void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce, uint32_t batch_size); }
 namespace RandomX_Graft   { void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce, uint32_t batch_size); }
+namespace RandomX_Lozzax  { void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce, uint32_t batch_size); }
 
 #ifdef XMRIG_ALGO_KAWPOW
 void kawpow_prepare(nvid_ctx *ctx, const void* cache, size_t cache_size, const void* dag_precalc, size_t dag_size, uint32_t height, const uint64_t* dag_sizes);

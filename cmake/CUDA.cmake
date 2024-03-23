@@ -230,6 +230,8 @@ if (WITH_RANDOMX)
         src/RandomX/hash.hpp
         src/RandomX/keva/configuration.h
         src/RandomX/keva/randomx_keva.cu
+        src/RandomX/lozzax/configuration.h
+        src/RandomX/lozzax/randomx_lozzax.cu
         src/RandomX/monero/configuration.h
         src/RandomX/monero/randomx_monero.cu
         src/RandomX/randomx_cuda.hpp
