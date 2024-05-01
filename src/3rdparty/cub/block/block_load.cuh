@@ -34,6 +34,7 @@
 #pragma once
 
 #include <iterator>
+#include <type_traits>
 
 #include "block_exchange.cuh"
 #include "../iterator/cache_modified_input_iterator.cuh"
@@ -364,7 +365,7 @@ __device__ __forceinline__ void LoadDirectWarpStriped(
     #pragma unroll
     for (int ITEM = 0; ITEM < ITEMS_PER_THREAD; ITEM++)
     {
-        items[ITEM] = block_itr[warp_offset + tid + (ITEM * CUB_PTX_WARP_THREADS)];
+        new(&items[ITEM]) InputT(block_itr[warp_offset + tid + (ITEM * CUB_PTX_WARP_THREADS)]);
     }
 }
 
@@ -401,7 +402,7 @@ __device__ __forceinline__ void LoadDirectWarpStriped(
     {
         if (warp_offset + tid + (ITEM * CUB_PTX_WARP_THREADS) < valid_items)
         {
-            items[ITEM] = block_itr[warp_offset + tid + (ITEM * CUB_PTX_WARP_THREADS)];
+            new(&items[ITEM]) InputT(block_itr[warp_offset + tid + (ITEM * CUB_PTX_WARP_THREADS)]);
         }
     }
 }
@@ -473,6 +474,18 @@ enum BlockLoadAlgorithm
     BLOCK_LOAD_DIRECT,
 
     /**
+    * \par Overview
+    *
+    * A [<em>striped arrangement</em>](index.html#sec5sec3) of data is read
+    * directly from memory.
+    *
+    * \par Performance Considerations
+    * - The utilization of memory transactions (coalescing) decreases as the
+    *   access stride between threads increases (i.e., the number items per thread).
+    */
+    BLOCK_LOAD_STRIPED,
+
+    /**
      * \par Overview
      *
      * A [<em>blocked arrangement</em>](index.html#sec5sec3) of data is read
@@ -507,7 +520,6 @@ enum BlockLoadAlgorithm
      */
     BLOCK_LOAD_TRANSPOSE,
 
-
     /**
      * \par Overview
      *
@@ -527,7 +539,6 @@ enum BlockLoadAlgorithm
      *   BLOCK_LOAD_WARP_TRANSPOSE_TIMESLICED alternative.
      */
     BLOCK_LOAD_WARP_TRANSPOSE,
-
 
     /**
      * \par Overview
@@ -571,6 +582,8 @@ enum BlockLoadAlgorithm
  *   performance policies for different architectures, data types, granularity sizes, etc.
  * - BlockLoad can be optionally specialized by different data movement strategies:
  *   -# <b>cub::BLOCK_LOAD_DIRECT</b>.  A [<em>blocked arrangement</em>](index.html#sec5sec3)
+ *      of data is read directly from memory.  [More...](\ref cub::BlockLoadAlgorithm)
+*    -# <b>cub::BLOCK_LOAD_STRIPED,</b>.  A [<em>striped arrangement</em>](index.html#sec5sec3)
  *      of data is read directly from memory.  [More...](\ref cub::BlockLoadAlgorithm)
  *   -# <b>cub::BLOCK_LOAD_VECTORIZE</b>.  A [<em>blocked arrangement</em>](index.html#sec5sec3)
  *      of data is read directly from memory using CUDA's built-in vectorized loads as a
@@ -616,6 +629,13 @@ enum BlockLoadAlgorithm
  * The set of \p thread_data across the block of threads in those threads will be
  * <tt>{ [0,1,2,3], [4,5,6,7], ..., [508,509,510,511] }</tt>.
  *
+ * \par Re-using dynamically allocating shared memory
+ * The following example under the examples/block folder illustrates usage of
+ * dynamically shared memory with BlockReduce and how to re-purpose
+ * the same memory region:
+ * <a href="../../examples/block/example_block_reduce_dyn_smem.cu">example_block_reduce_dyn_smem.cu</a>
+ *
+ * This example can be easily adapted to the storage required by BlockLoad.
  */
 template <
     typename            InputT,
@@ -698,6 +718,59 @@ private:
             DefaultT        oob_default)                    ///< [in] Default value to assign out-of-bound items
         {
             LoadDirectBlocked(linear_tid, block_itr, items, valid_items, oob_default);
+        }
+
+    };
+
+
+    /**
+    * BLOCK_LOAD_STRIPED specialization of load helper
+    */
+    template <int DUMMY>
+    struct LoadInternal<BLOCK_LOAD_STRIPED, DUMMY>
+    {
+        /// Shared memory storage layout type
+        typedef NullType TempStorage;
+
+        /// Linear thread-id
+        int linear_tid;
+
+        /// Constructor
+        __device__ __forceinline__ LoadInternal(
+            TempStorage &/*temp_storage*/,
+            int linear_tid)
+        :
+            linear_tid(linear_tid)
+        {}
+
+        /// Load a linear segment of items from memory
+        template <typename InputIteratorT>
+        __device__ __forceinline__ void Load(
+            InputIteratorT  block_itr,                      ///< [in] The thread block's base input iterator for loading from
+            InputT          (&items)[ITEMS_PER_THREAD])     ///< [out] Data to load{
+        {
+            LoadDirectStriped<BLOCK_THREADS>(linear_tid, block_itr, items);
+        }
+
+        /// Load a linear segment of items from memory, guarded by range
+        template <typename InputIteratorT>
+        __device__ __forceinline__ void Load(
+            InputIteratorT  block_itr,                      ///< [in] The thread block's base input iterator for loading from
+            InputT          (&items)[ITEMS_PER_THREAD],     ///< [out] Data to load
+            int             valid_items)                    ///< [in] Number of valid items to load
+        {
+            LoadDirectStriped<BLOCK_THREADS>(linear_tid, block_itr, items, valid_items);
+        }
+
+        /// Load a linear segment of items from memory, guarded by range, with a fall-back assignment of out-of-bound elements
+        template <typename InputIteratorT, typename DefaultT>
+        __device__ __forceinline__ void Load(
+            InputIteratorT  block_itr,                      ///< [in] The thread block's base input iterator for loading from
+            InputT          (&items)[ITEMS_PER_THREAD],     ///< [out] Data to load
+            int             valid_items,                    ///< [in] Number of valid items to load
+            DefaultT        oob_default)                    ///< [in] Default value to assign out-of-bound items
+        {
+            LoadDirectStriped<BLOCK_THREADS>(linear_tid, block_itr, items, valid_items, oob_default);
         }
 
     };
@@ -865,7 +938,7 @@ private:
         };
 
         // Assert BLOCK_THREADS must be a multiple of WARP_THREADS
-        CUB_STATIC_ASSERT((BLOCK_THREADS % WARP_THREADS == 0), "BLOCK_THREADS must be a multiple of WARP_THREADS");
+        CUB_STATIC_ASSERT((int(BLOCK_THREADS) % int(WARP_THREADS) == 0), "BLOCK_THREADS must be a multiple of WARP_THREADS");
 
         // BlockExchange utility type for keys
         typedef BlockExchange<InputT, BLOCK_DIM_X, ITEMS_PER_THREAD, false, BLOCK_DIM_Y, BLOCK_DIM_Z, PTX_ARCH> BlockExchange;
@@ -940,7 +1013,7 @@ private:
         };
 
         // Assert BLOCK_THREADS must be a multiple of WARP_THREADS
-        CUB_STATIC_ASSERT((BLOCK_THREADS % WARP_THREADS == 0), "BLOCK_THREADS must be a multiple of WARP_THREADS");
+        CUB_STATIC_ASSERT((int(BLOCK_THREADS) % int(WARP_THREADS) == 0), "BLOCK_THREADS must be a multiple of WARP_THREADS");
 
         // BlockExchange utility type for keys
         typedef BlockExchange<InputT, BLOCK_DIM_X, ITEMS_PER_THREAD, true, BLOCK_DIM_Y, BLOCK_DIM_Z, PTX_ARCH> BlockExchange;
@@ -1221,6 +1294,17 @@ public:
 
     //@}  end member group
 
+};
+
+template <class Policy,
+          class It,
+          class T = typename std::iterator_traits<It>::value_type>
+struct BlockLoadType
+{
+  using type = cub::BlockLoad<T,
+                              Policy::BLOCK_THREADS,
+                              Policy::ITEMS_PER_THREAD,
+                              Policy::LOAD_ALGORITHM>;
 };
 
 
