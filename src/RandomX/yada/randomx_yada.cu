@@ -26,7 +26,7 @@ along with RandomX CUDA.  If not, see<http://www.gnu.org/licenses/>.
 #include <cstdint>
 
 
-namespace RandomX_Keva {
+namespace RandomX_Yada {
     #include "configuration.h"
     #define fillAes4Rx4 fillAes4Rx4_v104
     #include "RandomX/common.hpp"
