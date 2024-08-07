@@ -57,6 +57,7 @@ if (NOT CUDA_VERSION VERSION_LESS 11.5)
 endif()
 
 if (NOT CUDA_VERSION VERSION_LESS 11.8)
+    list(APPEND DEFAULT_CUDA_ARCH "89")
     list(APPEND DEFAULT_CUDA_ARCH "90")
 endif()
 list(SORT DEFAULT_CUDA_ARCH)
@@ -228,14 +229,14 @@ if (WITH_RANDOMX)
         src/RandomX/graft/configuration.h
         src/RandomX/graft/randomx_graft.cu
         src/RandomX/hash.hpp
-        src/RandomX/keva/configuration.h
-        src/RandomX/keva/randomx_keva.cu
         src/RandomX/monero/configuration.h
         src/RandomX/monero/randomx_monero.cu
         src/RandomX/randomx_cuda.hpp
         src/RandomX/randomx.cu
         src/RandomX/wownero/configuration.h
         src/RandomX/wownero/randomx_wownero.cu
+        src/RandomX/yada/configuration.h
+        src/RandomX/yada/randomx_yada.cu
     )
 else()
     set(CUDA_RANDOMX_SOURCES "")
