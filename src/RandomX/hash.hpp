@@ -32,7 +32,7 @@ __global__ void find_shares(const void* hashes, uint64_t target, uint32_t* share
     }
 }
 
-void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce, uint32_t batch_size)
+void hash(nvid_ctx *ctx, uint32_t nonce, uint32_t nonce_offset, uint64_t target, uint32_t *rescount, uint32_t *resnonce, uint32_t batch_size)
 {
     if (ctx->inputlen <= 128) {
         CUDA_CHECK_KERNEL(ctx->device_id, blake2b_initial_hash << <batch_size / 32, 32 >> > (ctx->d_rx_hashes, ctx->d_input, ctx->inputlen, nonce));
@@ -41,8 +41,7 @@ void hash(nvid_ctx *ctx, uint32_t nonce, uint64_t target, uint32_t *rescount, ui
         CUDA_CHECK_KERNEL(ctx->device_id, blake2b_initial_hash_double << <batch_size / 32, 32 >> > (ctx->d_rx_hashes, ctx->d_input, ctx->inputlen, nonce));
     }
     else {
-        *rescount = 0;
-        return;
+        CUDA_CHECK_KERNEL(ctx->device_id, blake2b_initial_hash_big << <batch_size / 32, 32 >> > (ctx->d_rx_hashes, ctx->d_input, ctx->inputlen, nonce, nonce_offset));
     }
 
     CUDA_CHECK_KERNEL(ctx->device_id, fillAes1Rx4<RANDOMX_SCRATCHPAD_L3, false, 64><<<batch_size / 32, 32 * 4>>>(ctx->d_rx_hashes, ctx->d_long_state, batch_size));

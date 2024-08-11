@@ -1,3 +1,6 @@
+# v6.22.0
+- [#201](https://github.com/xmrig/xmrig-cuda/pull/201) Added support for [Yada](https://yadacoin.io/) (`rx/yada` algorithm).
+
 # v6.21.1
 - The binary downloads now only support the latest version of each major CUDA release.
 - Improved build speed with CUDA 11.3 or higher.

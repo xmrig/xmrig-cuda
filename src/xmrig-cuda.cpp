@@ -185,23 +185,23 @@ bool rxHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *resco
         switch (ctx->algorithm.id()) {
         case Algorithm::RX_0:
         case Algorithm::RX_SFX:
-            RandomX_Monero::hash(ctx, startNonce, target, rescount, resnonce, ctx->rx_batch_size);
+            RandomX_Monero::hash(ctx, startNonce, 39, target, rescount, resnonce, ctx->rx_batch_size);
             break;
 
         case Algorithm::RX_WOW:
-            RandomX_Wownero::hash(ctx, startNonce, target, rescount, resnonce, ctx->rx_batch_size);
+            RandomX_Wownero::hash(ctx, startNonce, 39, target, rescount, resnonce, ctx->rx_batch_size);
             break;
 
         case Algorithm::RX_ARQ:
-            RandomX_Arqma::hash(ctx, startNonce, target, rescount, resnonce, ctx->rx_batch_size);
+            RandomX_Arqma::hash(ctx, startNonce, 39, target, rescount, resnonce, ctx->rx_batch_size);
             break;
 
-        case Algorithm::RX_KEVA:
-            RandomX_Keva::hash(ctx, startNonce, target, rescount, resnonce, ctx->rx_batch_size);
+        case Algorithm::RX_YADA:
+            RandomX_Yada::hash(ctx, startNonce, 147, target, rescount, resnonce, ctx->rx_batch_size);
             break;
 
         case Algorithm::RX_GRAFT:
-            RandomX_Graft::hash(ctx, startNonce, target, rescount, resnonce, ctx->rx_batch_size);
+            RandomX_Graft::hash(ctx, startNonce, 39, target, rescount, resnonce, ctx->rx_batch_size);
             break;
 
         default:
