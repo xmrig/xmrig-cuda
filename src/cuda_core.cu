@@ -513,7 +513,7 @@ __global__ void cryptonight_core_gpu_phase2_quad(
 
     float conc_var;
     if (ALGO == Algorithm::CN_CCX) {
-        conc_var = (partidx != 0) ? int_as_float(*(d_ctx_b + threads * 4 + thread * 4 + sub)) : 0.0f;
+        conc_var = (partidx != 0) ? __int_as_float(*(d_ctx_b + threads * 4 + thread * 4 + sub)) : 0.0f;
     }
 
     #pragma unroll 2
@@ -551,9 +551,9 @@ __global__ void cryptonight_core_gpu_phase2_quad(
                 uint32_t x_0 = loadGlobal32<uint32_t>(long_state + j);
 
                 if (ALGO == Algorithm::CN_CCX) {
-                    float r = int2float((int32_t)x_0) + conc_var;
-                    r = int_as_float((float_as_int(r * r * r) & 0x807FFFFF) | 0x40000000);
-                    x_0 ^= (int32_t)(int_as_float((float_as_int(conc_var) & 0x807FFFFF) | 0x40000000) * 536870880.0f);
+                    float r = __int2float_rn((int32_t)x_0) + conc_var;
+                    r = __int_as_float((__float_as_int(r * r * r) & 0x807FFFFF) | 0x40000000);
+                    x_0 ^= (int32_t)(__int_as_float((__float_as_int(conc_var) & 0x807FFFFF) | 0x40000000) * 536870880.0f);
                     conc_var += r;
                 }
 
@@ -644,7 +644,7 @@ __global__ void cryptonight_core_gpu_phase2_quad(
             }
         }
         if (ALGO == Algorithm::CN_CCX) {
-            *(d_ctx_b + threads * 4 + thread * 4 + sub) = float_as_int(conc_var);
+            *(d_ctx_b + threads * 4 + thread * 4 + sub) = __float_as_int(conc_var);
         }
     }
 }
