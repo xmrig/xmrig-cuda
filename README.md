@@ -39,5 +39,7 @@ Due to JSON format restrictions, the directory separator must be written in Linu
 ## Linux
 Linux usage is almost the same as Windows except we don't provide binaries and you must build the plugin from the source and the name of the plugin is different **`libxmrig-cuda.so`**.
 
+For more detailed information, see the [setup guide](/documentation/linux_setup.md).
+
 ## macOS
 CUDA no longer supports macOS, which means that the plugin also does not support it.
