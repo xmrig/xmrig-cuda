@@ -551,8 +551,18 @@ int cuda_get_deviceinfo(nvid_ctx *ctx)
     ctx->device_mpcount         = props.multiProcessorCount;
     ctx->device_arch[0]         = props.major;
     ctx->device_arch[1]         = props.minor;
-    ctx->device_clockRate       = props.clockRate;
-    ctx->device_memoryClockRate = props.memoryClockRate;
+    //ctx->device_clockRate       = props.clockRate;
+    //ctx->device_memoryClockRate = props.memoryClockRate;
+    err = cudaDeviceGetAttribute(&(ctx->device_clockRate), cudaDevAttrClockRate, ctx->device_id);
+    if (err != cudaSuccess) {
+        printf("\nGPU %d: %s\n%s line %d\n", ctx->device_id, cudaGetErrorString(err), __FUNCTION__, __LINE__);
+        return 1;
+    }
+    err = cudaDeviceGetAttribute(&(ctx->device_memoryClockRate), cudaDevAttrMemoryClockRate, ctx->device_id);
+    if (err != cudaSuccess) {
+        printf("\nGPU %d: %s\n%s line %d\n", ctx->device_id, cudaGetErrorString(err), __FUNCTION__, __LINE__);
+        return 1;
+    }
     ctx->device_pciBusID        = props.pciBusID;
     ctx->device_pciDeviceID     = props.pciDeviceID;
     ctx->device_pciDomainID     = props.pciDomainID;
