@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
 project(xmrig-cuda)
+enable_language(CUDA)
 include(cmake/CUDA-Version.cmake)
 
-
+add_compile_options(-fPIC)
 option(WITH_DRIVER_API "Enable CUDA Driver API and NVRTC, required for cn/r and kawpow algorithms" ON)
 
 # Algorithm selection
@@ -66,6 +67,7 @@ endif()
 
 
 include_directories(src)
+include_directories("${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")
 add_definitions(/DCUB_IGNORE_DEPRECATED_CPP_DIALECT)
 
 
