@@ -147,6 +147,12 @@ void hash(nvid_ctx *ctx, uint8_t* job_blob, uint64_t target, uint32_t *rescount,
         block.x, block.y, block.z,
         0, nullptr, args, 0
     ));
+
+    // Only sleep if it's >100 to have backwards compatibility (default value of 25 will be ignored)
+    if (ctx->device_bsleep > 100) {
+        compat_usleep(ctx->device_bsleep);
+    }
+
     CU_CHECK(ctx->device_id, cuCtxSynchronize());
 
     *skipped_hashes = ctx->kawpow_stop_host[1];
