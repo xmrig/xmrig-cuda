@@ -34,7 +34,7 @@
 
 #ifdef _WIN32
 #include <Windows.h>
-static void compat_usleep(int waitTime)
+void compat_usleep(int waitTime)
 {
     if (waitTime > 0) {
         if (waitTime > 100) {
@@ -67,7 +67,7 @@ static void compat_usleep(int waitTime)
 }
 #else
 #include <unistd.h>
-static inline void compat_usleep(int waitTime)
+void compat_usleep(int waitTime)
 {
     usleep(static_cast<uint64_t>(waitTime));
 }

@@ -42,3 +42,5 @@
 }                                                                                                       \
 ( (void) 0 )
 #endif
+
+void compat_usleep(int waitTime);
