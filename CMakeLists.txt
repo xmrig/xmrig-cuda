@@ -101,16 +101,22 @@ add_library(${CMAKE_PROJECT_NAME} SHARED ${SOURCES})
 target_link_libraries(${CMAKE_PROJECT_NAME} xmrig-cu ${LIBS})
 
 if (WITH_DRIVER_API AND WIN32)
-    if (CUDA_VERSION VERSION_LESS 10.0)
-        file(GLOB NVRTCDLL "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvrtc64*.dll")
+    if (CUDA_VERSION VERSION_LESS 13.0)
+        set(CUDA_DLL_PATH "${CUDA_TOOLKIT_ROOT_DIR}/bin")
     else()
-        file(GLOB NVRTCDLL "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvrtc64*_0.dll")
+        set(CUDA_DLL_PATH "${CUDA_TOOLKIT_ROOT_DIR}/bin/x64")
+    endif()
+
+    if (CUDA_VERSION VERSION_LESS 10.0)
+        file(GLOB NVRTCDLL "${CUDA_DLL_PATH}/nvrtc64*.dll")
+    else()
+        file(GLOB NVRTCDLL "${CUDA_DLL_PATH}/nvrtc64*_0.dll")
     endif()
 
     add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${NVRTCDLL}" $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>)
 
-    file(GLOB NVRTCBUILTINDLL "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvrtc-builtins64*.dll")
+    file(GLOB NVRTCBUILTINDLL "${CUDA_DLL_PATH}/nvrtc-builtins64*.dll")
     add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${NVRTCBUILTINDLL}" $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>)
 endif()
