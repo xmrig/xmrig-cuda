@@ -14,7 +14,11 @@ if (XMRIG_LARGEGRID)
     add_definitions("-DXMRIG_LARGEGRID=${XMRIG_LARGEGRID}")
 endif()
 
-set(DEFAULT_CUDA_ARCH "50")
+if (CUDA_VERSION VERSION_LESS 13.0)
+    set(DEFAULT_CUDA_ARCH "50")
+else()
+    set(DEFAULT_CUDA_ARCH "75")
+endif()
 
 # Fermi GPUs are only supported with CUDA < 9.0
 if (CUDA_VERSION VERSION_LESS 9.0)
@@ -28,14 +32,16 @@ elseif (CUDA_VERSION VERSION_LESS 12.0)
     list(APPEND DEFAULT_CUDA_ARCH "35")
 endif()
 
-# add Pascal support for CUDA >= 8.0
-if (NOT CUDA_VERSION VERSION_LESS 8.0)
-    list(APPEND DEFAULT_CUDA_ARCH "60")
-endif()
+if (CUDA_VERSION VERSION_LESS 13.0)
+    # add Pascal support for CUDA >= 8.0
+    if (NOT CUDA_VERSION VERSION_LESS 8.0)
+        list(APPEND DEFAULT_CUDA_ARCH "60")
+    endif()
 
-# add Volta support for CUDA >= 9.0
-if (NOT CUDA_VERSION VERSION_LESS 9.0)
-    list(APPEND DEFAULT_CUDA_ARCH "70")
+    # add Volta support for CUDA >= 9.0
+    if (NOT CUDA_VERSION VERSION_LESS 9.0)
+        list(APPEND DEFAULT_CUDA_ARCH "70")
+    endif()
 endif()
 
 # add Turing support for CUDA >= 10.0
