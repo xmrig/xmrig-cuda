@@ -23,6 +23,24 @@ along with RandomX CUDA.  If not, see<http://www.gnu.org/licenses/>.
 #include <cstdint>
 
 
+#ifndef RANDOMX_TWEAK_V2_CFROUND
+#   define RANDOMX_TWEAK_V2_CFROUND 0
+#endif
+
+#ifndef RANDOMX_TWEAK_V2_AES
+#   define RANDOMX_TWEAK_V2_AES 0
+#endif
+
+#ifndef RANDOMX_TWEAK_V2_PREFETCH
+#   define RANDOMX_TWEAK_V2_PREFETCH 0
+#endif
+
+#ifndef RANDOMX_TWEAK_V2_COMMITMENT
+#   define RANDOMX_TWEAK_V2_COMMITMENT 0
+#endif
+
+
+#define RANDOMX_HASH_SIZE          32
 #define RANDOMX_DATASET_ITEM_SIZE  64
 #define RANDOMX_DATASET_EXTRA_SIZE 33554368
 #define RANDOMX_JUMP_BITS          8

@@ -124,24 +124,30 @@ template<> __device__ uint64_t rotr64<16>(uint64_t a)
 
 #define BLAKE2B_ROUNDS() ROUND(0);ROUND(1);ROUND(2);ROUND(3);ROUND(4);ROUND(5);ROUND(6);ROUND(7);ROUND(8);ROUND(9);ROUND(10);ROUND(11);
 
-__device__ void blake2b_512_process_single_block(uint64_t *h, const uint64_t* m, uint32_t in_len)
+template<uint32_t out_len>
+__device__ void blake2b_process_single_block(uint64_t *out, const uint64_t* m, uint32_t in_len)
 {
 	uint64_t v[16] =
 	{
-		Blake2b_IV::iv0 ^ 0x01010040ul, Blake2b_IV::iv1, Blake2b_IV::iv2, Blake2b_IV::iv3, Blake2b_IV::iv4         , Blake2b_IV::iv5,  Blake2b_IV::iv6, Blake2b_IV::iv7,
+		Blake2b_IV::iv0 ^ (0x01010000ul | out_len), Blake2b_IV::iv1, Blake2b_IV::iv2, Blake2b_IV::iv3, Blake2b_IV::iv4         , Blake2b_IV::iv5,  Blake2b_IV::iv6, Blake2b_IV::iv7,
 		Blake2b_IV::iv0               , Blake2b_IV::iv1, Blake2b_IV::iv2, Blake2b_IV::iv3, Blake2b_IV::iv4 ^ in_len, Blake2b_IV::iv5, ~Blake2b_IV::iv6, Blake2b_IV::iv7,
 	};
 
 	BLAKE2B_ROUNDS();
 
-	h[0] = v[0] ^ v[ 8] ^ Blake2b_IV::iv0 ^ 0x01010040ul;
-	h[1] = v[1] ^ v[ 9] ^ Blake2b_IV::iv1;
-	h[2] = v[2] ^ v[10] ^ Blake2b_IV::iv2;
-	h[3] = v[3] ^ v[11] ^ Blake2b_IV::iv3;
-	h[4] = v[4] ^ v[12] ^ Blake2b_IV::iv4;
-	h[5] = v[5] ^ v[13] ^ Blake2b_IV::iv5;
-	h[6] = v[6] ^ v[14] ^ Blake2b_IV::iv6;
-	h[7] = v[7] ^ v[15] ^ Blake2b_IV::iv7;
+	if (out_len >  0) out[0] = v[0] ^ v[ 8] ^ Blake2b_IV::iv0 ^ (0x01010000ul | out_len);
+	if (out_len >  8) out[1] = v[1] ^ v[ 9] ^ Blake2b_IV::iv1;
+	if (out_len > 16) out[2] = v[2] ^ v[10] ^ Blake2b_IV::iv2;
+	if (out_len > 24) out[3] = v[3] ^ v[11] ^ Blake2b_IV::iv3;
+	if (out_len > 32) out[4] = v[4] ^ v[12] ^ Blake2b_IV::iv4;
+	if (out_len > 40) out[5] = v[5] ^ v[13] ^ Blake2b_IV::iv5;
+	if (out_len > 48) out[6] = v[6] ^ v[14] ^ Blake2b_IV::iv6;
+	if (out_len > 56) out[7] = v[7] ^ v[15] ^ Blake2b_IV::iv7;
+}
+
+__device__ void blake2b_512_process_single_block(uint64_t *h, const uint64_t* m, uint32_t in_len)
+{
+	blake2b_process_single_block<64>(h, m, in_len);
 }
 
 template<uint32_t out_len>

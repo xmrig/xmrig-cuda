@@ -61,6 +61,11 @@ __device__ T bit_cast(double value)
 	return static_cast<T>(__double_as_longlong(value));
 }
 
+__device__ uint64_t rotr64_dynamic(uint64_t value, uint32_t shift)
+{
+	return shift == 0 ? value : ((value >> shift) | (value << (64 - shift)));
+}
+
 __device__ double load_F_E_groups(int value, uint64_t andMask, uint64_t orMask)
 {
 	uint64_t x = bit_cast<uint64_t>(__int2double_rn(value));
@@ -68,6 +73,79 @@ __device__ double load_F_E_groups(int value, uint64_t andMask, uint64_t orMask)
 	x |= orMask;
 	return __longlong_as_double(static_cast<int64_t>(x));
 }
+
+#if RANDOMX_TWEAK_V2_AES
+__device__ uint32_t byte32(uint32_t value, uint32_t shift)
+{
+	return (value >> shift) & 0xFFU;
+}
+
+__device__ void aesenc_round(uint32_t state[4], const uint32_t key[4])
+{
+	uint32_t out[4];
+
+	out[0] = AES_TABLE[byte32(state[0],  0)] ^ AES_TABLE[256 + byte32(state[3],  8)] ^ AES_TABLE[512 + byte32(state[2], 16)] ^ AES_TABLE[768 + byte32(state[1], 24)] ^ key[0];
+	out[1] = AES_TABLE[byte32(state[1],  0)] ^ AES_TABLE[256 + byte32(state[0],  8)] ^ AES_TABLE[512 + byte32(state[3], 16)] ^ AES_TABLE[768 + byte32(state[2], 24)] ^ key[1];
+	out[2] = AES_TABLE[byte32(state[2],  0)] ^ AES_TABLE[256 + byte32(state[1],  8)] ^ AES_TABLE[512 + byte32(state[0], 16)] ^ AES_TABLE[768 + byte32(state[3], 24)] ^ key[2];
+	out[3] = AES_TABLE[byte32(state[3],  0)] ^ AES_TABLE[256 + byte32(state[2],  8)] ^ AES_TABLE[512 + byte32(state[1], 16)] ^ AES_TABLE[768 + byte32(state[0], 24)] ^ key[3];
+
+	state[0] = out[0];
+	state[1] = out[1];
+	state[2] = out[2];
+	state[3] = out[3];
+}
+
+__device__ void aesdec_round(uint32_t state[4], const uint32_t key[4])
+{
+	uint32_t out[4];
+
+	out[0] = AES_TABLE[1024 + byte32(state[0],  0)] ^ AES_TABLE[1280 + byte32(state[1],  8)] ^ AES_TABLE[1536 + byte32(state[2], 16)] ^ AES_TABLE[1792 + byte32(state[3], 24)] ^ key[0];
+	out[1] = AES_TABLE[1024 + byte32(state[1],  0)] ^ AES_TABLE[1280 + byte32(state[2],  8)] ^ AES_TABLE[1536 + byte32(state[3], 16)] ^ AES_TABLE[1792 + byte32(state[0], 24)] ^ key[1];
+	out[2] = AES_TABLE[1024 + byte32(state[2],  0)] ^ AES_TABLE[1280 + byte32(state[3],  8)] ^ AES_TABLE[1536 + byte32(state[0], 16)] ^ AES_TABLE[1792 + byte32(state[1], 24)] ^ key[2];
+	out[3] = AES_TABLE[1024 + byte32(state[3],  0)] ^ AES_TABLE[1280 + byte32(state[0],  8)] ^ AES_TABLE[1536 + byte32(state[1], 16)] ^ AES_TABLE[1792 + byte32(state[2], 24)] ^ key[3];
+
+	state[0] = out[0];
+	state[1] = out[1];
+	state[2] = out[2];
+	state[3] = out[3];
+}
+
+__device__ uint64_t mix_F_E_groups_v2(const double *F, const double *E, int32_t sub)
+{
+	const int32_t reg = sub >> 1;
+	const uint64_t f0 = bit_cast<uint64_t>(F[reg * 2]);
+	const uint64_t f1 = bit_cast<uint64_t>(F[reg * 2 + 1]);
+	uint32_t state[4] = {
+		static_cast<uint32_t>(f0),
+		static_cast<uint32_t>(f0 >> 32),
+		static_cast<uint32_t>(f1),
+		static_cast<uint32_t>(f1 >> 32)
+	};
+
+	for (int32_t round = 0; round < 4; ++round) {
+		const uint64_t e0 = bit_cast<uint64_t>(E[round * 2]);
+		const uint64_t e1 = bit_cast<uint64_t>(E[round * 2 + 1]);
+		const uint32_t key[4] = {
+			static_cast<uint32_t>(e0),
+			static_cast<uint32_t>(e0 >> 32),
+			static_cast<uint32_t>(e1),
+			static_cast<uint32_t>(e1 >> 32)
+		};
+
+		if ((reg & 1) == 0) {
+			aesenc_round(state, key);
+		}
+		else {
+			aesdec_round(state, key);
+		}
+	}
+
+	const uint64_t lo = static_cast<uint64_t>(state[0]) | (static_cast<uint64_t>(state[1]) << 32);
+	const uint64_t hi = static_cast<uint64_t>(state[2]) | (static_cast<uint64_t>(state[3]) << 32);
+
+	return (sub & 1) == 0 ? lo : hi;
+}
+#endif
 
 __device__ void test_memory_access(uint64_t* r, uint8_t* scratchpad, uint32_t batch_size)
 {
@@ -2024,7 +2102,14 @@ __device__ void inner_loop(
 				else if (ROUNDING_MODE < 0)
 				{
 					asm("// CFROUND (1/256) ------>");
-					imm_buf[IMM_INDEX_COUNT + 1] = ((src >> imm_offset) | (src << (64 - imm_offset))) & 3;
+					const uint64_t rotated_src = rotr64_dynamic(src, imm_offset);
+#if RANDOMX_TWEAK_V2_CFROUND
+					if ((rotated_src & 60) == 0) {
+						imm_buf[IMM_INDEX_COUNT + 1] = rotated_src & 3;
+					}
+#else
+					imm_buf[IMM_INDEX_COUNT + 1] = rotated_src & 3;
+#endif
 					asm("// <------ CFROUND (1/256)");
 					goto execution_end;
 				}
@@ -2169,14 +2254,25 @@ __global__ void __launch_bounds__((WORKERS_PER_HASH == 16) ? 32 : 16, 16) execut
 
 		if ((WORKERS_PER_HASH <= 8) || (sub < 8))
 		{
+			const uint32_t readPtr = ma;
+
+#if RANDOMX_TWEAK_V2_PREFETCH
+			ma ^= *readReg2 ^ *readReg3;
+			ma &= CacheLineAlignMask;
+#else
 			mx ^= *readReg2 ^ *readReg3;
 			mx &= CacheLineAlignMask;
+#endif
 
-			const uint64_t next_r = *r ^ *(const uint64_t*)(dataset + ma + sub * 8);
+			const uint64_t next_r = *r ^ *(const uint64_t*)(dataset + readPtr + sub * 8);
 			*r = next_r;
 
 			*p1 = next_r;
+#if RANDOMX_TWEAK_V2_AES
+			*p0 = mix_F_E_groups_v2(F, E, sub);
+#else
 			*p0 = bit_cast<uint64_t>(f[0]) ^ bit_cast<uint64_t>(e[0]);
+#endif
 
 			uint32_t tmp = ma;
 			ma = mx;

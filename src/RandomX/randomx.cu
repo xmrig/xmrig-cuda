@@ -29,6 +29,9 @@ along with RandomX CUDA.  If not, see<http://www.gnu.org/licenses/>.
 
 void randomx_prepare(nvid_ctx *ctx, const void *dataset, size_t dataset_size, uint32_t batch_size)
 {
+    constexpr size_t kMaxEntropySize = 3200;
+    constexpr size_t kMaxVmStateSize = 3072;
+
     ctx->rx_batch_size      = batch_size;
     ctx->d_scratchpads_size = batch_size * (ctx->algorithm.l3() + 64);
 
@@ -42,8 +45,8 @@ void randomx_prepare(nvid_ctx *ctx, const void *dataset, size_t dataset_size, ui
 
     CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_long_state, ctx->d_scratchpads_size));
     CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_rx_hashes, batch_size * 64));
-    CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_rx_entropy, batch_size * (128 + 2560)));
-    CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_rx_vm_states, batch_size * 2560));
+    CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_rx_entropy, batch_size * kMaxEntropySize));
+    CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_rx_vm_states, batch_size * kMaxVmStateSize));
     CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_rx_rounding, batch_size * sizeof(uint32_t)));
 }
 

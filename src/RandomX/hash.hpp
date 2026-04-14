@@ -32,6 +32,112 @@ __global__ void find_shares(const void* hashes, uint64_t target, uint32_t* share
     }
 }
 
+#if RANDOMX_TWEAK_V2_COMMITMENT
+__global__ void blake2b_hash_commitment_single(void *hashes, const void *blockTemplate, uint32_t blockTemplate_len, uint32_t start_nonce, uint32_t nonce_offset)
+{
+    const uint32_t global_index = blockIdx.x * blockDim.x + threadIdx.x;
+    const uint8_t *input = (const uint8_t *) blockTemplate;
+    const uint8_t *raw_hash = ((const uint8_t *) hashes) + global_index * 32;
+
+    uint64_t block[16] = { 0 };
+    uint8_t *msg = (uint8_t *) block;
+
+    for (uint32_t i = 0; i < blockTemplate_len; ++i) {
+        msg[i] = input[i];
+    }
+
+    const uint32_t nonce = start_nonce + global_index;
+    msg[nonce_offset + 0] = static_cast<uint8_t>(nonce);
+    msg[nonce_offset + 1] = static_cast<uint8_t>(nonce >> 8);
+    msg[nonce_offset + 2] = static_cast<uint8_t>(nonce >> 16);
+    msg[nonce_offset + 3] = static_cast<uint8_t>(nonce >> 24);
+
+    for (uint32_t i = 0; i < RANDOMX_HASH_SIZE; ++i) {
+        msg[blockTemplate_len + i] = raw_hash[i];
+    }
+
+    const uint32_t total_len = blockTemplate_len + RANDOMX_HASH_SIZE;
+    if (total_len % sizeof(uint64_t)) {
+        block[total_len / sizeof(uint64_t)] &= uint64_t(-1) >> (64 - (total_len % sizeof(uint64_t)) * 8);
+    }
+
+    uint64_t commitment[4] = { 0 };
+    blake2b_process_single_block<RANDOMX_HASH_SIZE>(commitment, block, total_len);
+
+    uint64_t *out = ((uint64_t *) hashes) + global_index * (RANDOMX_HASH_SIZE / sizeof(uint64_t));
+    out[0] = commitment[0];
+    out[1] = commitment[1];
+    out[2] = commitment[2];
+    out[3] = commitment[3];
+}
+
+__global__ void blake2b_hash_commitment_big(void *hashes, const void *blockTemplate, uint32_t blockTemplate_len, uint32_t start_nonce, uint32_t nonce_offset)
+{
+    const uint32_t global_index = blockIdx.x * blockDim.x + threadIdx.x;
+    const uint8_t *input = (const uint8_t *) blockTemplate;
+    const uint8_t *raw_hash = ((const uint8_t *) hashes) + global_index * 32;
+
+    uint64_t message[64] = { 0 };
+    uint8_t *msg = (uint8_t *) message;
+
+    for (uint32_t i = 0; i < blockTemplate_len; ++i) {
+        msg[i] = input[i];
+    }
+
+    for (uint32_t i = 0; i < RANDOMX_HASH_SIZE; ++i) {
+        msg[blockTemplate_len + i] = raw_hash[i];
+    }
+
+    const uint32_t total_len = blockTemplate_len + RANDOMX_HASH_SIZE;
+    uint64_t commitment[4] = { 0 };
+    blake2b_512_process_big_block<RANDOMX_HASH_SIZE>(commitment, message, total_len, start_nonce + global_index, nonce_offset);
+
+    uint64_t *out = ((uint64_t *) hashes) + global_index * (RANDOMX_HASH_SIZE / sizeof(uint64_t));
+    out[0] = commitment[0];
+    out[1] = commitment[1];
+    out[2] = commitment[2];
+    out[3] = commitment[3];
+}
+
+__global__ void blake2b_hash_commitment_double(void *hashes, const void *blockTemplate, uint32_t blockTemplate_len, uint32_t start_nonce, uint32_t nonce_offset)
+{
+    const uint32_t global_index = blockIdx.x * blockDim.x + threadIdx.x;
+    const uint8_t *input = (const uint8_t *) blockTemplate;
+    const uint8_t *raw_hash = ((const uint8_t *) hashes) + global_index * 32;
+
+    uint64_t blocks[32] = { 0 };
+    uint8_t *msg = (uint8_t *) blocks;
+
+    for (uint32_t i = 0; i < blockTemplate_len; ++i) {
+        msg[i] = input[i];
+    }
+
+    const uint32_t nonce = start_nonce + global_index;
+    msg[nonce_offset + 0] = static_cast<uint8_t>(nonce);
+    msg[nonce_offset + 1] = static_cast<uint8_t>(nonce >> 8);
+    msg[nonce_offset + 2] = static_cast<uint8_t>(nonce >> 16);
+    msg[nonce_offset + 3] = static_cast<uint8_t>(nonce >> 24);
+
+    for (uint32_t i = 0; i < RANDOMX_HASH_SIZE; ++i) {
+        msg[blockTemplate_len + i] = raw_hash[i];
+    }
+
+    const uint32_t total_len = blockTemplate_len + RANDOMX_HASH_SIZE;
+    if (total_len % sizeof(uint64_t)) {
+        blocks[total_len / sizeof(uint64_t)] &= uint64_t(-1) >> (64 - (total_len % sizeof(uint64_t)) * 8);
+    }
+
+    uint64_t commitment[4] = { 0 };
+    blake2b_512_process_double_block<RANDOMX_HASH_SIZE>(commitment, blocks, blocks, total_len);
+
+    uint64_t *out = ((uint64_t *) hashes) + global_index * (RANDOMX_HASH_SIZE / sizeof(uint64_t));
+    out[0] = commitment[0];
+    out[1] = commitment[1];
+    out[2] = commitment[2];
+    out[3] = commitment[3];
+}
+#endif
+
 void hash(nvid_ctx *ctx, uint32_t nonce, uint32_t nonce_offset, uint64_t target, uint32_t *rescount, uint32_t *resnonce, uint32_t batch_size)
 {
     if (ctx->inputlen <= 128) {
@@ -62,6 +168,19 @@ void hash(nvid_ctx *ctx, uint32_t nonce, uint32_t nonce_offset, uint64_t target,
             CUDA_CHECK_KERNEL(ctx->device_id, blake2b_hash_registers<REGISTERS_SIZE, VM_STATE_SIZE, 64><<<batch_size / 32, 32>>>(ctx->d_rx_hashes, ctx->d_rx_vm_states));
         }
     }
+
+#if RANDOMX_TWEAK_V2_COMMITMENT
+    const uint32_t commitment_size = ctx->inputlen + RANDOMX_HASH_SIZE;
+    if (commitment_size <= 128) {
+        CUDA_CHECK_KERNEL(ctx->device_id, blake2b_hash_commitment_single<<<batch_size / 32, 32>>>(ctx->d_rx_hashes, ctx->d_input, ctx->inputlen, nonce, nonce_offset));
+    }
+    else if (commitment_size <= 256) {
+        CUDA_CHECK_KERNEL(ctx->device_id, blake2b_hash_commitment_double<<<batch_size / 32, 32>>>(ctx->d_rx_hashes, ctx->d_input, ctx->inputlen, nonce, nonce_offset));
+    }
+    else {
+        CUDA_CHECK_KERNEL(ctx->device_id, blake2b_hash_commitment_big<<<batch_size / 32, 32>>>(ctx->d_rx_hashes, ctx->d_input, ctx->inputlen, nonce, nonce_offset));
+    }
+#endif
 
     CUDA_CHECK(ctx->device_id, cudaMemset(ctx->d_result_nonce, 0, 10 * sizeof(uint32_t)));
     CUDA_CHECK_KERNEL(ctx->device_id, find_shares<<<batch_size / 32, 32>>>(ctx->d_rx_hashes, target, ctx->d_result_nonce));
