@@ -55,6 +55,7 @@ public:
         CN_PICO_TLO     = 0x63120274,   // "cn-pico/tlo"      CryptoNight-Pico (TLO)
         CN_UPX2         = 0x63110200,   // "cn/upx2"          Uplexa (UPX2)
         RX_0            = 0x72151200,   // "rx/0"             RandomX (reference configuration).
+        RX_V2           = 0x72151202,   // "rx/2"             RandomX (Monero v2).
         RX_WOW          = 0x72141177,   // "rx/wow"           RandomWOW (Wownero).
         RX_ARQ          = 0x72121061,   // "rx/arq"           RandomARQ (Arqma).
         RX_GRAFT        = 0x72151267,   // "rx/graft"         RandomGRAFT (Graft).

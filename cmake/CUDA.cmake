@@ -231,6 +231,8 @@ if (WITH_RANDOMX)
         src/RandomX/hash.hpp
         src/RandomX/monero/configuration.h
         src/RandomX/monero/randomx_monero.cu
+        src/RandomX/monero_v2/configuration.h
+        src/RandomX/monero_v2/randomx_monero_v2.cu
         src/RandomX/randomx_cuda.hpp
         src/RandomX/randomx.cu
         src/RandomX/wownero/configuration.h

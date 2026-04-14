@@ -188,6 +188,10 @@ bool rxHash(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *resco
             RandomX_Monero::hash(ctx, startNonce, 39, target, rescount, resnonce, ctx->rx_batch_size);
             break;
 
+        case Algorithm::RX_V2:
+            RandomX_MoneroV2::hash(ctx, startNonce, 39, target, rescount, resnonce, ctx->rx_batch_size);
+            break;
+
         case Algorithm::RX_WOW:
             RandomX_Wownero::hash(ctx, startNonce, 39, target, rescount, resnonce, ctx->rx_batch_size);
             break;
