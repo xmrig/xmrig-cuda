@@ -551,11 +551,17 @@ int cuda_get_deviceinfo(nvid_ctx *ctx)
     ctx->device_mpcount         = props.multiProcessorCount;
     ctx->device_arch[0]         = props.major;
     ctx->device_arch[1]         = props.minor;
-    ctx->device_clockRate       = props.clockRate;
-    ctx->device_memoryClockRate = props.memoryClockRate;
     ctx->device_pciBusID        = props.pciBusID;
     ctx->device_pciDeviceID     = props.pciDeviceID;
     ctx->device_pciDomainID     = props.pciDomainID;
+
+#   if CUDART_VERSION >= 13000
+    CUDA_CHECK(ctx->device_id, cudaDeviceGetAttribute(&ctx->device_clockRate, cudaDevAttrClockRate, ctx->device_id));
+    CUDA_CHECK(ctx->device_id, cudaDeviceGetAttribute(&ctx->device_memoryClockRate, cudaDevAttrMemoryClockRate, ctx->device_id));
+#   else
+    ctx->device_clockRate       = props.clockRate;
+    ctx->device_memoryClockRate = props.memoryClockRate;
+#   endif
 
     if ((ctx->algorithm.family() == Algorithm::RANDOM_X) && ((ctx->device_blocks < 0) || (ctx->device_threads < 0))) {
         ctx->device_threads = 32;
