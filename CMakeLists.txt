@@ -22,6 +22,8 @@ else()
     option(WITH_KAWPOW   "Enable KawPow algorithms family" ON)
 endif()
 
+option(WITH_ANIMICA "Enable Animica hashshare PoW (SHA3-256)" ON)
+
 if (WITH_CN_LITE)
     add_definitions(/DXMRIG_ALGO_CN_LITE)
 endif()
@@ -53,6 +55,10 @@ if (WITH_KAWPOW)
         set(WITH_KAWPOW OFF)
         message(STATUS "CUDA ${CUDA_VERSION}: KawPow disabled, requires WITH_DRIVER_API=ON for CUDA Driver API and NVRTC")
     endif()
+endif()
+
+if (WITH_ANIMICA)
+    add_definitions(/DXMRIG_ALGO_ANIMICA)
 endif()
 
 if (WITH_CN_R)

@@ -64,6 +64,7 @@ public:
         AR2_CHUKWA_V2   = 0x61140000,   // "argon2/chukwav2"  Argon2id (Chukwa v2).
         AR2_WRKZ        = 0x61120000,   // "argon2/wrkz"      Argon2id (WRKZ)
         KAWPOW_RVN      = 0x6b0f0000,   // "kawpow/rvn"       KawPow (RVN)
+        ANIMICA_SHA3    = 0x41010000,   // "animica"          Animica hashshare PoW (SHA3-256 over prefix||nonce_le8)
     };
 
     enum Family : uint32_t {
@@ -76,7 +77,8 @@ public:
         CN_FEMTO        = 0x63110000,
         RANDOM_X        = 0x72000000,
         ARGON2          = 0x61000000,
-        KAWPOW          = 0x6b000000
+        KAWPOW          = 0x6b000000,
+        ANIMICA         = 0x41000000
     };
 
     inline Algorithm() = default;

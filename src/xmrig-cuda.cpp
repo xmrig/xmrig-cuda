@@ -333,6 +333,27 @@ bool kawPowStopHash(nvid_ctx *ctx)
 }
 
 
+bool animicaHash(nvid_ctx *ctx, uint8_t *job_blob, uint64_t target,
+                  uint32_t startNonce, uint32_t *rescount, uint32_t *resnonce,
+                  uint32_t *skipped_hashes)
+{
+    using namespace xmrig_cuda;
+
+#   ifdef XMRIG_ALGO_ANIMICA
+    resetError(ctx->device_id);
+    try {
+        Animica::hash(ctx, job_blob, target, startNonce, rescount, resnonce, skipped_hashes);
+    }
+    catch (std::exception &ex) {
+        return saveError(ctx->device_id, ex);
+    }
+    return true;
+#   else
+    return saveError(ctx->device_id, kUnsupportedAlgorithm);
+#   endif
+}
+
+
 bool setJob(nvid_ctx *ctx, const void *data, size_t size, uint32_t algo)
 {
     using namespace xmrig_cuda;
@@ -354,6 +375,18 @@ bool setJob(nvid_ctx *ctx, const void *data, size_t size, uint32_t algo)
         if (f == Algorithm::RANDOM_X) {
             cuda_extra_cpu_set_data(ctx, data, size);
         }
+#       ifdef XMRIG_ALGO_ANIMICA
+        else if (f == Algorithm::ANIMICA) {
+            // Animica's CUDA kernel reads job_blob directly per
+            // animicaHash() call (the kernel is small enough that we
+            // don't carry per-job device-side scratch for it the way
+            // CryptoNight / RandomX do). setJob() is therefore a no-op
+            // for this family — we still record ctx->algorithm above
+            // so device-info paths see the right family.
+            (void)data;
+            (void)size;
+        }
+#       endif
         else {
             cryptonight_extra_cpu_set_data(ctx, data, size);
         }
