@@ -252,6 +252,15 @@ else()
     set(CUDA_KAWPOW_SOURCES "")
 endif()
 
+if (WITH_ANIMICA)
+    set(CUDA_ANIMICA_SOURCES
+        src/Animica/Animica.h
+        src/Animica/Animica.cu
+    )
+else()
+    set(CUDA_ANIMICA_SOURCES "")
+endif()
+
 set(CUDA_SOURCES
     src/cryptonight.h
     src/cuda_aes.hpp
@@ -267,6 +276,7 @@ set(CUDA_SOURCES
     src/cuda_skein.hpp
     ${CUDA_RANDOMX_SOURCES}
     ${CUDA_KAWPOW_SOURCES}
+    ${CUDA_ANIMICA_SOURCES}
 )
 
 if("${CUDA_COMPILER}" STREQUAL "clang")

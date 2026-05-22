@@ -134,3 +134,7 @@ void kawpow_stop_hash(nvid_ctx *ctx);
 
 namespace KawPow_Raven    { void hash(nvid_ctx *ctx, uint8_t* job_blob, uint64_t target, uint32_t *rescount, uint32_t *resnonce, uint32_t *skipped_hashes); }
 #endif
+
+#ifdef XMRIG_ALGO_ANIMICA
+namespace Animica         { void hash(nvid_ctx *ctx, uint8_t *job_blob, uint64_t target, uint32_t startNonce, uint32_t *rescount, uint32_t *resnonce, uint32_t *skipped_hashes); }
+#endif
